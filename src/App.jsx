@@ -159,8 +159,8 @@ export default function App() {
       {/* 📌 2. PERMANENT SLIM ICON STRIP NAVIGATION (With Dynamic Hover Tooltips) */}
       <aside style={styles.sidebarWrapper}>
         <nav style={styles.sidebarNavigationRibbon}>
-          {/* Executive Panel Tab */}
-          <div
+          {/* Dashboard Tab */}
+          {/* <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("dashboard")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -178,7 +178,7 @@ export default function App() {
             {hoveredTab === "dashboard" && (
               <div style={styles.floatingTooltip}>Executive Panel</div>
             )}
-          </div>
+          </div> */}
 
           {/* Weighbridge Ledger Tab */}
           <div
@@ -202,7 +202,7 @@ export default function App() {
           </div>
 
           {/* Data Explorer Tab */}
-          <div
+          {/* <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("trends")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -220,10 +220,10 @@ export default function App() {
             {hoveredTab === "trends" && (
               <div style={styles.floatingTooltip}>Data Explorer</div>
             )}
-          </div>
+          </div> */}
 
           {/* Pricing Matrix Tab */}
-          <div
+          {/* <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("materials")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -241,10 +241,10 @@ export default function App() {
             {hoveredTab === "materials" && (
               <div style={styles.floatingTooltip}>Pricing Matrix</div>
             )}
-          </div>
+          </div> */}
 
           {/* Cabin Operators Tab */}
-          <div
+          {/* <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("clerks")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -262,10 +262,10 @@ export default function App() {
             {hoveredTab === "clerks" && (
               <div style={styles.floatingTooltip}>Cabin Operators</div>
             )}
-          </div>
+          </div> */}
 
           {/* Void Clearances Tab */}
-          <div
+          {/* <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("voids")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -283,7 +283,7 @@ export default function App() {
             {hoveredTab === "voids" && (
               <div style={styles.floatingTooltip}>Void Clearances</div>
             )}
-          </div>
+          </div> */}
         </nav>
       </aside>
 

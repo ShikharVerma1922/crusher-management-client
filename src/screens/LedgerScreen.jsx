@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
 import * as XLSX from "xlsx";
+import { exportToExcelFormat } from "../utils/excel.js";
 import {
   Calendar,
   Download,
@@ -11,6 +12,7 @@ import {
   AlertCircle,
   SlidersHorizontal,
 } from "lucide-react";
+import DateRangeFilter from "../components/DateRangeFilter.jsx";
 
 export default function LedgerScreen() {
   const { adminApi } = useContext(AdminContext);
@@ -19,11 +21,18 @@ export default function LedgerScreen() {
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
+  const [totalQuantity, setTotalQuantity] = useState(0);
+  const [totalCash, setTotalCash] = useState(0);
+  const [totalCredit, setTotalCredit] = useState(0);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [limit] = useState(15);
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  const [editingTicketId, setEditingTicketId] = useState(null);
+  const [editingAmount, setEditingAmount] = useState("");
 
   // 🗓️ 1. TIME-SERIES BOUNDARY INITIALIZATION CONTEXT
   // Returns a raw "YYYY-MM-DD" string mapping to local calendar states cleanly
@@ -44,64 +53,59 @@ export default function LedgerScreen() {
 
   const calculatePresetBoundaries = useCallback((preset) => {
     const today = new Date();
+    const shiftStart = new Date(today);
 
-    // Create an absolute localized midnight base anchor for calculations
-    const localMidnightBase = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
+    if (shiftStart.getHours() < 9) {
+      shiftStart.setDate(shiftStart.getDate() - 1);
+    }
 
-    const end = new Date(); // End date stays exactly as current time moment
-    let start = new Date(localMidnightBase.getTime()); // Copy the midnight base anchor
+    shiftStart.setHours(9, 0, 0, 0);
+
+    let start = new Date(shiftStart);
+    const end = new Date();
 
     switch (preset) {
       case "today":
-        // Already pinned perfectly to 00:00:00 local time
         break;
       case "this_week":
-        const dayOfWeek = localMidnightBase.getDay();
-        start.setDate(localMidnightBase.getDate() - dayOfWeek);
+        const dayOfWeek = shiftStart.getDay();
+        start.setDate(shiftStart.getDate() - dayOfWeek);
         break;
       case "this_month":
         start = new Date(
-          localMidnightBase.getFullYear(),
-          localMidnightBase.getMonth(),
+          shiftStart.getFullYear(),
+          shiftStart.getMonth(),
           1,
-          0,
+          9,
           0,
           0,
           0,
         );
         break;
       case "this_year":
-        start = new Date(localMidnightBase.getFullYear(), 0, 1, 0, 0, 0, 0);
+        start = new Date(shiftStart.getFullYear(), 0, 1, 9, 0, 0, 0);
         break;
       case "last_7_days":
-        start.setDate(localMidnightBase.getDate() - 7);
+        start.setDate(shiftStart.getDate() - 7);
         break;
       case "last_30_days":
-        start.setDate(localMidnightBase.getDate() - 30);
+        start.setDate(shiftStart.getDate() - 30);
         break;
       case "last_3_months":
-        start.setMonth(localMidnightBase.getMonth() - 3);
+        start.setMonth(shiftStart.getMonth() - 3);
         break;
       case "last_6_months":
-        start.setMonth(localMidnightBase.getMonth() - 6);
+        start.setMonth(shiftStart.getMonth() - 6);
         break;
       case "last_1_year":
-        start.setFullYear(localMidnightBase.getFullYear() - 1);
+        start.setFullYear(shiftStart.getFullYear() - 1);
         break;
       case "custom":
         return;
       default:
         start = new Date(
-          localMidnightBase.getFullYear(),
-          localMidnightBase.getMonth(),
+          shiftStart.getFullYear(),
+          shiftStart.getMonth(),
           1,
           0,
           0,
@@ -128,18 +132,22 @@ export default function LedgerScreen() {
       setLoading(true);
       setErrorMessage("");
       try {
-        // 🌟 THE BACKEND WINDOW ALIGNMENT:
-        // Forces the start date to catch the absolute first second of the day (00:00:00)
-        // Forces the end date to catch the absolute last second of the day (23:59:59)
-        const absoluteStartDate = `${startDate}T00:00:00.000Z`;
-        const absoluteEndDate = `${endDate}T23:59:59.999Z`;
+        const start = new Date(startDate);
+        start.setHours(9, 0, 0, 0);
+
+        const end = new Date(endDate);
+        end.setDate(end.getDate() + 1);
+        end.setHours(8, 59, 59, 999);
+
+        const absoluteStartDate = start.toISOString();
+        const absoluteEndDate = end.toISOString();
 
         const queryParams = new URLSearchParams({
           page: pageTarget,
           limit: limit,
           ...(searchQuery.trim() && { search: searchQuery.trim() }),
-          startDate: absoluteStartDate, // Passes perfectly through gte
-          endDate: absoluteEndDate, // Passes perfectly through lte
+          startDate: absoluteStartDate,
+          endDate: absoluteEndDate,
         });
 
         console.log(
@@ -156,6 +164,9 @@ export default function LedgerScreen() {
           if (backendPayload.meta) {
             setTotalPages(backendPayload.meta.totalPages || 1);
             setCurrentPage(backendPayload.meta.currentPage || pageTarget);
+            setTotalQuantity(backendPayload.meta.totalQuantity || 0);
+            setTotalCash(backendPayload.meta.totalCash || 0);
+            setTotalCredit(backendPayload.meta.totalCredit || 0);
           }
         } else {
           setTickets([]);
@@ -179,56 +190,50 @@ export default function LedgerScreen() {
     fetchLedgerData(1);
   }, [searchQuery, startDate, endDate]);
 
-  const exportToExcelFormat = () => {
-    if (tickets.length === 0) return;
-    const flatSheetData = tickets.map((t, index) => ({
-      "Receipt No": t.receiptNumber || index + 1,
-      "System Ticket UUID": t.id,
-      "Date & Time Logged": new Date(t.createdAt).toLocaleString("en-IN"),
-      "Vehicle Plate Number": t.vehicleNumber.toUpperCase(),
-      "Customer / Vendor": t.customerName,
-      "Material Variant": t.material?.name || "Aggregates Row",
-      "Gross Weight (KG)": t.grossWeight,
-      "Tare Weight (KG)": t.tareWeight,
-      "Net Weight (KG)": t.netWeight,
-      "Rate (INR/Ton)": t.rateApplied,
-      "Total Invoiced Bill (INR)": t.totalAmount,
-      "Cabin Clerk": t.clerk?.name || "System Clerk",
-      "Void Status": t.isVoided ? "VOIDED" : "OPERATIONAL",
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(flatSheetData);
-    const workbook = XLSX.utils.book_new();
-    worksheet["!cols"] = [
-      { wch: 12 },
-      { wch: 38 },
-      { wch: 22 },
-      { wch: 22 },
-      { wch: 26 },
-      { wch: 24 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 24 },
-      { wch: 20 },
-      { wch: 16 },
-    ];
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Weighbridge Ledger");
-    XLSX.writeFile(
-      workbook,
-      `Mandar_Crusher_Ledger_${startDate}_to_${endDate}.xlsx`,
-    );
-  };
+  async function handleEditCreditAmount(ticketId, quantity) {
+    try {
+      const response = await adminApi.patch(
+        `/transactions/${ticketId}/credit-amount`,
+        {
+          amount: Number(editingAmount),
+          quantity,
+        },
+      );
+      setTickets((prev) =>
+        prev.map((ticket) =>
+          ticket.id === ticketId
+            ? {
+                ...ticket,
+                totalAmount: response.data.data.totalAmount,
+                rateApplied: response.data.data.rateApplied,
+              }
+            : ticket,
+        ),
+      );
+    } finally {
+      setEditingTicketId(null);
+    }
+  }
 
   return (
     <div style={styles.viewViewportContainer}>
       <div style={styles.staticHeaderBlock}>
         <div style={styles.actionHeader}>
-          <div>
-            <h1 style={styles.pageTitle}>CARGO LEDGER</h1>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "row",
+              fontSize: "small",
+              gap: "10px",
+            }}
+          >
+            <span style={{ height: "15px" }}>Total Cash: {totalCash}</span>
+            <span style={{ height: "15px" }}>Total Credit: {totalCredit}</span>
           </div>
-          <button onClick={exportToExcelFormat} style={styles.exportButton}>
+          <button
+            onClick={() => exportToExcelFormat(tickets, startDate, endDate)}
+            style={styles.exportButton}
+          >
             <Download size={16} style={{ marginRight: 6 }} /> Export to Excel
           </button>
         </div>
@@ -246,80 +251,15 @@ export default function LedgerScreen() {
             />
           </div>
 
-          <div style={styles.datePickerWrapper}>
-            {/* 🌟 PRESET TIMELINE QUICK DROPDOWN */}
-            <div style={styles.dropdownInputGroup}>
-              <SlidersHorizontal
-                size={14}
-                style={{ color: "#64748b", marginRight: 6 }}
-              />
-              <select
-                value={dateRangePreset}
-                onChange={(e) => setDateRangePreset(e.target.value)}
-                style={styles.selectDropdownElement}
-              >
-                <option value="today">Today</option>
-                <option value="this_week">This Week</option>
-                <option value="this_month">This Month</option>
-                <option value="this_year">This Year</option>
-                <option value="last_7_days">Last 7 Days</option>
-                <option value="last_30_days">Last 30 Days</option>
-                <option value="last_3_months">Last 3 Months</option>
-                <option value="last_6_months">Last 6 Months</option>
-                <option value="last_1_year">Last 1 Year</option>
-                <option value="custom">Custom Range...</option>
-              </select>
-            </div>
-
-            {/* MANUAL CALENDAR OVERRIDES - Visual styles alter to show focus if Custom select is checked */}
-            <div
-              style={
-                dateRangePreset !== "custom"
-                  ? styles.dateInputGroupReadOnly
-                  : styles.dateInputGroup
-              }
-            >
-              <input
-                type="date"
-                value={startDate}
-                onChange={(e) => {
-                  setStartDate(e.target.value);
-                  setDateRangePreset("custom");
-                }}
-                style={styles.dateField}
-              />
-            </div>
-            <span
-              style={{ color: "#94a3b8", fontSize: "12px", fontWeight: "bold" }}
-            >
-              to
-            </span>
-            <div
-              style={
-                dateRangePreset !== "custom"
-                  ? styles.dateInputGroupReadOnly
-                  : styles.dateInputGroup
-              }
-            >
-              <input
-                type="date"
-                value={endDate}
-                onChange={(e) => {
-                  setEndDate(e.target.value);
-                  setDateRangePreset("custom");
-                }}
-                style={styles.dateField}
-              />
-            </div>
-
-            <button
-              onClick={() => fetchLedgerData(currentPage)}
-              style={styles.refreshButton}
-              title="Force Reload Data"
-            >
-              <RefreshCw size={14} />
-            </button>
-          </div>
+          <DateRangeFilter
+            dateRangePreset={dateRangePreset}
+            setDateRangePreset={setDateRangePreset}
+            startDate={startDate}
+            setStartDate={setStartDate}
+            endDate={endDate}
+            setEndDate={setEndDate}
+            onFetchData={() => fetchLedgerData(currentPage)}
+          />
         </div>
 
         {errorMessage && (
@@ -355,19 +295,21 @@ export default function LedgerScreen() {
                     <th width="90" style={styles.thElement}>
                       Receipt No
                     </th>
+
                     <th style={styles.thElement}>Date/Time</th>
-                    <th style={styles.thElement}>Vehicle No</th>
                     <th width="100" style={styles.thElement}>
-                      Customer Name
+                      Customer
                     </th>
+                    <th style={styles.thElement}>Vehicle No.</th>
+                    <th style={styles.thElement}>Site</th>
                     <th width="100" style={styles.thElement}>
-                      Material Variant
+                      Material
                     </th>
-                    <th style={styles.thElement}>Gross(KG)</th>
-                    <th style={styles.thElement}>Tare(KG)</th>
-                    <th style={styles.thElement}>Net(KG)</th>
-                    <th style={styles.thElement}>Total Bill</th>
-                    <th style={styles.thElement}>Operator Clerk</th>
+
+                    <th style={styles.thElement}>Quantity</th>
+                    <th style={styles.thElement}>Rate</th>
+                    <th style={styles.thElement}>Type</th>
+                    <th style={styles.thElement}>Total Amount</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -382,22 +324,28 @@ export default function LedgerScreen() {
                       >
                         {ticket.receiptNumber}
                       </td>
-                      <td style={styles.tdElement}>
+                      <td style={{ ...styles.tdElement, color: "#64748b" }}>
                         {new Date(ticket.createdAt).toLocaleString("en-IN", {
                           dateStyle: "short",
                           timeStyle: "short",
                         })}
                       </td>
+                      <td style={{ ...styles.tdElement, color: "#4b5563" }}>
+                        {ticket.customerName}
+                      </td>
                       <td
                         style={{
                           ...styles.tdElement,
                           fontWeight: "700",
-                          color: "#2563eb",
+                          letterSpacing: "0.5px",
+                          // color: "#2563eb",
                         }}
                       >
                         {ticket.vehicleNumber.toUpperCase()}
                       </td>
-                      <td style={styles.tdElement}>{ticket.customerName}</td>
+                      <td style={{ ...styles.tdElement, color: "#64748b" }}>
+                        {ticket.site.toLocaleString()}
+                      </td>
                       <td
                         style={{
                           ...styles.tdElement,
@@ -407,12 +355,7 @@ export default function LedgerScreen() {
                       >
                         {ticket.material?.name || "Standard aggregate"}
                       </td>
-                      <td style={styles.tdElement}>
-                        {ticket.grossWeight.toLocaleString()}
-                      </td>
-                      <td style={styles.tdElement}>
-                        {ticket.tareWeight.toLocaleString()}
-                      </td>
+
                       <td
                         style={{
                           ...styles.tdElement,
@@ -420,19 +363,76 @@ export default function LedgerScreen() {
                           color: "#334155",
                         }}
                       >
-                        {ticket.netWeight.toLocaleString()}
+                        {ticket.quantity.toLocaleString()}
+                      </td>
+                      <td style={styles.tdElement}>
+                        {ticket.rateApplied
+                          ? ticket.rateApplied.toLocaleString()
+                          : "N/A"}
+                      </td>
+                      <td style={styles.tdElement}>
+                        {ticket.paymentType.toLocaleString()}
                       </td>
                       <td
                         style={{
                           ...styles.tdElement,
                           fontWeight: "800",
-                          color: "#16a34a",
+                          color:
+                            ticket.paymentType === "CASH"
+                              ? "#16a34a"
+                              : "#0284c7",
+                          cursor:
+                            ticket.paymentType === "CASH"
+                              ? "default"
+                              : "pointer",
+                        }}
+                        onDoubleClick={() => {
+                          setEditingTicketId(ticket.id);
+                          setEditingAmount(String(ticket.totalAmount));
                         }}
                       >
-                        ₹{ticket.totalAmount.toLocaleString()}
-                      </td>
-                      <td style={styles.tdElement}>
-                        {ticket.clerk?.name || "Gate Operator"}
+                        {editingTicketId === ticket.id &&
+                        ticket.paymentType === "CREDIT" ? (
+                          <input
+                            type="number"
+                            value={editingAmount}
+                            autoFocus
+                            onChange={(e) => setEditingAmount(e.target.value)}
+                            onBlur={() => {
+                              handleEditCreditAmount(
+                                ticket.id,
+                                ticket.quantity,
+                              );
+                              setEditingTicketId(null);
+                            }}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                handleEditCreditAmount(
+                                  ticket.id,
+                                  ticket.quantity,
+                                );
+                                setEditingTicketId(null);
+                              }
+                              if (e.key === "Escape") {
+                                setEditingTicketId(null);
+                              }
+                            }}
+                            style={{
+                              width: "80px",
+                              padding: "2px 4px",
+                              border: "1px solid #cbd5e1",
+                              borderRadius: "6px",
+                              backgroundColor: "#f8fafc",
+                              color: "#0f172a",
+                              fontSize: "13px",
+                              fontWeight: "700",
+                              fontFamily: "inherit",
+                              outline: "none",
+                            }}
+                          />
+                        ) : (
+                          <>₹{ticket.totalAmount.toLocaleString()}</>
+                        )}
                       </td>
                     </tr>
                   ))}
@@ -492,7 +492,7 @@ const styles = {
     fontFamily: "system-ui, sans-serif",
   },
   staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
+    padding: "10px 24px 0px 24px",
     flexShrink: 0,
     width: "100%",
     boxSizing: "border-box",
@@ -531,6 +531,7 @@ const styles = {
     display: "flex",
     gap: "12px",
     backgroundColor: "#ffffff",
+    marginTop: "10px",
     padding: "12px",
     borderRadius: "8px",
     border: "1px solid #e2e8f0",
@@ -555,69 +556,6 @@ const styles = {
     padding: "6px 0",
     fontSize: "13px",
     color: "#334155",
-  },
-
-  datePickerWrapper: { display: "flex", alignItems: "center", gap: "8px" },
-  dropdownInputGroup: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#f1f5f9",
-    border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
-  },
-  selectDropdownElement: {
-    border: "none",
-    backgroundColor: "transparent",
-    outline: "none",
-    fontSize: "13px",
-    fontWeight: "600",
-    color: "#334155",
-    cursor: "pointer",
-    padding: "4px 0",
-  },
-  dateInputGroup: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
-    transition: "all 0.15s",
-  },
-  dateInputGroupReadOnly: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
-    opacity: 0.8,
-  },
-  dateField: {
-    border: "none",
-    backgroundColor: "transparent",
-    outline: "none",
-    padding: "4px 0",
-    color: "#334155",
-    fontSize: "13px",
-    fontFamily: "inherit",
-  },
-
-  refreshButton: {
-    backgroundColor: "#0f172a",
-    color: "#ffffff",
-    height: "32px",
-    width: "32px",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
   },
   errorAlertCard: {
     display: "flex",
