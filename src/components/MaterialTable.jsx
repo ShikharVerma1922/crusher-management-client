@@ -133,22 +133,15 @@ export default function MaterialTable() {
   // 🚀 2. FIXED UPDATE ACTION SUBMISSION LAYER
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.ratePerTon.trim()) return;
 
     setSubmitLoading(true);
     setErrorMessage("");
     try {
-      const payloadData = {
-        ratePerTon: parseFloat(formData.ratePerTon),
-      };
-
       if (editingMaterial) {
-        // 🌟 THE CRITICAL LINE CORRECTION: Swapped out .put() for your backend's .patch() execution handler
-        await adminApi.patch(`/materials/${editingMaterial.id}`, payloadData);
+        // await adminApi.patch(`/materials/${editingMaterial.id}`, payloadData);
       } else {
         // Fallback router rule mapping for initial structural generation
         await adminApi.post("/materials", {
-          ...payloadData,
           name: formData.name.trim().toUpperCase(),
         });
       }
