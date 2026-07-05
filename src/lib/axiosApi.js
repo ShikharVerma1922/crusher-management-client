@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const adminApi = axios.create({
-  baseURL: "http://localhost:3000/api",
+  baseURL: `${import.meta.env.VITE_SERVER}`,
   timeout: 8000,
   headers: { "Content-Type": "application/json" },
   withCredentials: true,
