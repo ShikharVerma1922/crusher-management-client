@@ -1,70 +1,87 @@
-// src/screens/MaterialScreen.jsx
+// src/screens/ClerkScreen.jsx
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
-import { Layers, Plus, Edit2, X, AlertCircle, Eye, EyeOff } from "lucide-react";
+import {
+  Users,
+  Plus,
+  Edit2,
+  X,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Shield,
+  Key,
+} from "lucide-react";
 import ConfirmationModal from "../components/ConfirmationModal.jsx";
 
-export default function MaterialScreen() {
+export default function ClerkTable() {
   const { adminApi } = useContext(AdminContext);
 
-  const [materials, setMaterials] = useState([]);
+  const [clerks, setClerks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [submitLoading, setSubmitLoading] = useState(false);
 
+  // 📝 Management Drawer Modal Control States
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingMaterial, setEditingMaterial] = useState(null);
-  const [formData, setFormData] = useState({ name: "", ratePerTon: "" });
+  const [editingClerk, setEditingClerk] = useState(null); // null = Register, object = Update Name/Password
+  const [formData, setFormData] = useState({
+    username: "",
+    name: "",
+    password: "",
+  });
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
-    item: null,
+    clerk: null,
   });
 
-  const triggerToggleConfirmation = (item) => {
-    setConfirmModal({ isOpen: true, item });
+  const triggerAccessConfirmation = (clerk) => {
+    setConfirmModal({ isOpen: true, clerk });
   };
 
-  const handleExecuteToggle = async () => {
-    const { item } = confirmModal;
-    if (!item) return;
+  // 🌟 3. Execute the server-side access patch shift
+  const handleExecuteAccessShift = async () => {
+    const { clerk } = confirmModal;
+    if (!clerk) return;
 
     try {
       setErrorMessage("");
-      const updatedStatus = !item.isActive;
-      await adminApi.patch(`/materials/${item.id}`, {
+      const updatedStatus = !clerk.isActive;
+      await adminApi.patch(`/user/${clerk.username}`, {
         isActive: updatedStatus,
       });
-      setMaterials((prev) =>
-        prev.map((m) =>
-          m.id === item.id ? { ...m, isActive: updatedStatus } : m,
+      setClerks((prev) =>
+        prev.map((c) =>
+          c.id === clerk.id ? { ...c, isActive: updatedStatus } : c,
         ),
       );
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.message || "Failed to toggle variant visibility.",
+        error.response?.data?.message || "Failed to alter clerk gate access.",
       );
     } finally {
-      setConfirmModal({ isOpen: false, item: null }); // Close modal smoothly
+      setConfirmModal({ isOpen: false, clerk: null });
     }
   };
 
-  // 📡 FETCH REGISTRY ENTITIES
-  const fetchMaterialRegistry = useCallback(async () => {
+  // 📡 FETCH ALL CLERKS
+  const fetchClerkRegistry = useCallback(async () => {
     setLoading(true);
     setErrorMessage("");
     try {
-      const response = await adminApi.get("/materials");
+      const response = await adminApi.get("/user/clerks");
       const payload = response.data?.data || response.data;
       if (Array.isArray(payload)) {
-        setMaterials(payload);
-      } else if (payload && Array.isArray(payload.materials)) {
-        setMaterials(payload.materials);
+        setClerks(payload);
+      } else if (payload && Array.isArray(payload.clerks)) {
+        setClerks(payload.clerks);
       }
     } catch (error) {
+      console.error("❌ Clerk Fetch Error:", error);
       setErrorMessage(
         error.response?.data?.message ||
-          "Failed to sync with material registry.",
+          "Failed to sync with clerk registry infrastructure.",
       );
     } finally {
       setLoading(false);
@@ -72,94 +89,107 @@ export default function MaterialScreen() {
   }, [adminApi]);
 
   useEffect(() => {
-    fetchMaterialRegistry();
-  }, [fetchMaterialRegistry]);
+    fetchClerkRegistry();
+  }, [fetchClerkRegistry]);
 
-  // 🔄 1. INLINE TOGGLE OPERATION: Fires an instant PATCH stream to flip operational availability
-  const handleToggleActiveStatus = async (item) => {
-    // 🌟 THE MISTAKE-PROOF GATE
-    const actionNoun = item.isActive ? "DEACTIVATE" : "ACTIVATE";
+  // 🔄 1. INLINE ACCESS TOGGLE (Flipped status instantly reaches backend PATCH endpoint)
+  const handleToggleClerkActive = async (clerk) => {
+    // 🌟 THE SECURITY LOCK GATE
+    const actionNoun = clerk.isActive ? "REVOKE ACCESS FOR" : "GRANT ACCESS TO";
     const confirmationMessage =
-      `Are you absolutely sure you want to ${actionNoun} "${item.name}"?\n\n` +
-      (item.isActive
-        ? "This will instantly hide this material from the Cabin clerks. They won't be able to log new truck weights for it."
-        : "This will expose this material type to the Cabin operator selection menus immediately.");
+      `⚠️ CRITICAL AUTH CONTROL ACTION\n\n` +
+      `Are you sure you want to ${actionNoun} operator "${clerk.name}" (@${clerk.username})?\n\n` +
+      (clerk.isActive
+        ? "This will immediately block this operator. If they are currently logged in at a cabin terminal, their next database action will fail."
+        : "This will restore this operator's system privileges, allowing them to sign into weighbridge shifts.");
 
     if (!window.confirm(confirmationMessage)) {
-      return; // Exit early if the owner clicks "Cancel"
+      return; // Kill execution if the owner hits "Cancel"
     }
 
     try {
       setErrorMessage("");
-      const updatedStatus = !item.isActive;
+      const updatedStatus = !clerk.isActive;
 
-      await adminApi.patch(`/materials/${item.id}`, {
+      await adminApi.patch(`/user/${clerk.username}`, {
         isActive: updatedStatus,
       });
 
-      setMaterials((prev) =>
-        prev.map((m) =>
-          m.id === item.id ? { ...m, isActive: updatedStatus } : m,
+      setClerks((prev) =>
+        prev.map((c) =>
+          c.id === clerk.id ? { ...c, isActive: updatedStatus } : c,
         ),
       );
-      console.log(`✅ [Matrix Control] ${item.name} set to ${actionNoun}`);
+      console.log(
+        `🛡️ [Access Control] Profile @${clerk.username} shifted to status: ${updatedStatus}`,
+      );
     } catch (error) {
       setErrorMessage(
-        error.response?.data?.message || "Failed to toggle variant visibility.",
+        error.response?.data?.message ||
+          "Failed to update clerk access window status.",
       );
-      fetchMaterialRegistry();
+      fetchClerkRegistry();
     }
   };
 
-  const handleOpenModal = (material = null) => {
-    if (material) {
-      setEditingMaterial(material);
-      setFormData({
-        name: material.name,
-        ratePerTon: material.ratePerTon.toString(),
-      });
+  const handleOpenModal = (clerk = null) => {
+    if (clerk) {
+      setEditingClerk(clerk);
+      setFormData({ username: clerk.username, name: clerk.name, password: "" }); // Passwords stay blank on edit load
     } else {
-      setEditingMaterial(null);
-      setFormData({ name: "", ratePerTon: "" });
+      setEditingClerk(null);
+      setFormData({ username: "", name: "", password: "" });
     }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: "", ratePerTon: "" });
-    setEditingMaterial(null);
+    setFormData({ username: "", name: "", password: "" });
+    setEditingClerk(null);
   };
 
-  // 🚀 2. FIXED UPDATE ACTION SUBMISSION LAYER
+  // 🚀 2. SUBMIT DATA REGISTRATION / UPDATE PAYLOADS
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.ratePerTon.trim()) return;
-
     setSubmitLoading(true);
     setErrorMessage("");
-    try {
-      const payloadData = {
-        ratePerTon: parseFloat(formData.ratePerTon),
-      };
 
-      if (editingMaterial) {
-        // 🌟 THE CRITICAL LINE CORRECTION: Swapped out .put() for your backend's .patch() execution handler
-        await adminApi.patch(`/materials/${editingMaterial.id}`, payloadData);
+    try {
+      if (editingClerk) {
+        // Build dynamic structural payload update blocks matching backend rules
+        const updatePayload = { name: formData.name.trim() };
+        if (formData.password.trim()) {
+          updatePayload.password = formData.password.trim(); // Add if forcing a password overwrite
+        }
+
+        await adminApi.patch(`/user/${editingClerk.username}`, updatePayload);
       } else {
-        // Fallback router rule mapping for initial structural generation
-        await adminApi.post("/materials", {
-          ...payloadData,
-          name: formData.name.trim().toUpperCase(),
+        // Enforce validations required for fresh profile construction
+        if (
+          !formData.username.trim() ||
+          !formData.password.trim() ||
+          !formData.name.trim()
+        ) {
+          throw new Error(
+            "All fields are mandatory when onboarding a fresh operating profile.",
+          );
+        }
+
+        await adminApi.post("/auth/register", {
+          username: formData.username.trim().toLowerCase(),
+          name: formData.name.trim(),
+          password: formData.password.trim(),
         });
       }
 
       handleCloseModal();
-      fetchMaterialRegistry();
+      fetchClerkRegistry();
     } catch (error) {
       setErrorMessage(
         error.response?.data?.message ||
-          "Failed to persist matrix modification.",
+          error.message ||
+          "Failed to persist clerk account parameters.",
       );
     } finally {
       setSubmitLoading(false);
@@ -170,14 +200,14 @@ export default function MaterialScreen() {
     <div style={styles.viewViewportContainer}>
       <div style={styles.staticHeaderBlock}>
         <div style={styles.actionHeader}>
-          <div>
-            <h1 style={styles.pageTitle}>MATERIAL PRICING</h1>
-          </div>
+          {/* <div>
+            <h1 style={styles.pageTitle}>CLERK REGISTRY</h1>
+          </div> */}
           <button
             onClick={() => handleOpenModal(null)}
             style={styles.createButton}
           >
-            <Plus size={16} style={{ marginRight: 6 }} /> Register New Variant
+            <Plus size={16} style={{ marginRight: 6 }} /> Add New Operator Clerk
           </button>
         </div>
 
@@ -198,45 +228,35 @@ export default function MaterialScreen() {
                 <p
                   style={{ marginTop: 12, color: "#64748b", fontSize: "13px" }}
                 >
-                  Syncing aggregate rates matrix...
+                  Gathering weighbridge access data parameters...
                 </p>
               </div>
-            ) : materials.length === 0 ? (
+            ) : clerks.length === 0 ? (
               <div style={styles.emptyStateBlock}>
                 <p style={{ color: "#64748b", fontWeight: "500" }}>
-                  No commercial inventory variants registered in database.
+                  No cabin operators registered inside this crusher
+                  infrastructure database framework.
                 </p>
               </div>
             ) : (
               <table style={styles.masterTableElement}>
                 <thead style={styles.stickyTableHeader}>
                   <tr>
-                    <th style={styles.thElement}>Variant Code</th>
-                    <th style={styles.thElement}>Material Nomenclature</th>
-                    <th style={styles.thElement}>Commercial Rate</th>
-                    <th style={styles.thElement}>Visibility Status</th>
-                    <th style={styles.thElement}>System Control Matrix</th>
+                    <th style={styles.thElement}>Operator Name</th>
+                    <th style={styles.thElement}>System Username</th>
+                    <th style={styles.thElement}>Terminal Access Status</th>
+                    <th style={styles.thElement}>Account Controls</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {materials.map((item) => (
+                  {clerks.map((clerk) => (
                     <tr
-                      key={item.id}
+                      key={clerk.id}
                       style={{
                         ...styles.tableBodyRowElement,
-                        opacity: item.isActive ? 1 : 0.65,
+                        opacity: clerk.isActive ? 1 : 0.6,
                       }}
                     >
-                      <td
-                        style={{
-                          ...styles.tdElement,
-                          fontFamily: "monospace",
-                          color: "#64748b",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {item.id.slice(0, 8).toUpperCase()}
-                      </td>
                       <td
                         style={{
                           ...styles.tdElement,
@@ -244,68 +264,54 @@ export default function MaterialScreen() {
                           color: "#0f172a",
                         }}
                       >
-                        {item.name}
+                        {clerk.name}
                       </td>
                       <td
                         style={{
                           ...styles.tdElement,
-                          fontWeight: "800",
-                          color: "#2563eb",
-                          fontSize: "14px",
+                          fontWeight: "600",
+                          color: "#475569",
                         }}
                       >
-                        ₹{item.ratePerTon?.toLocaleString("en-IN") || "N/A"}{" "}
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "#64748b",
-                            fontWeight: "500",
-                          }}
-                        >
-                          / MT
-                        </span>
+                        @{clerk.username}
                       </td>
                       <td style={styles.tdElement}>
                         <span
                           style={
-                            item.isActive
+                            clerk.isActive
                               ? styles.badgeActive
                               : styles.badgeInactive
                           }
                         >
-                          {item.isActive ? "ACTIVE" : "ARCHIVED / DISABLED"}
+                          {clerk.isActive
+                            ? "ACTIVE OPERATOR"
+                            : "TERMINAL REVOKED / INACTIVE"}
                         </span>
                       </td>
                       <td style={styles.tdElement}>
                         <div style={{ display: "flex", gap: "8px" }}>
                           <button
-                            onClick={() => handleOpenModal(item)}
+                            onClick={() => handleOpenModal(clerk)}
                             style={styles.editActionLink}
                           >
                             <Edit2 size={13} style={{ marginRight: 4 }} />{" "}
-                            Adjust Rate
+                            Modify Credentials
                           </button>
 
-                          {/* 🌟 THE ACTIVATE / DISABLE SLIDER ACTION TOGGLE BUTTON */}
                           <button
-                            onClick={() => triggerToggleConfirmation(item)}
+                            onClick={() => triggerAccessConfirmation(clerk)}
                             style={
-                              item.isActive
+                              clerk.isActive
                                 ? styles.toggleBtnActive
                                 : styles.toggleBtnInactive
                             }
-                            title={
-                              item.isActive
-                                ? "Hide from Cabin clerks"
-                                : "Expose to Cabin clerks"
-                            }
                           >
-                            {item.isActive ? (
+                            {clerk.isActive ? (
                               <EyeOff size={13} style={{ marginRight: 4 }} />
                             ) : (
                               <Eye size={13} style={{ marginRight: 4 }} />
                             )}
-                            {item.isActive ? "Deactivate" : "Activate"}
+                            {clerk.isActive ? "Revoke Access" : "Grant Access"}
                           </button>
                         </div>
                       </td>
@@ -318,6 +324,7 @@ export default function MaterialScreen() {
         </div>
       </div>
 
+      {/* 🛠️ OVERLAY ACCOUNT REGISTER/EDIT DRAWER MODAL */}
       {isModalOpen && (
         <div style={styles.modalOverlayMask}>
           <div style={styles.modalContentCard}>
@@ -325,11 +332,11 @@ export default function MaterialScreen() {
               <div
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                <Layers size={18} style={{ color: "#2563eb" }} />
+                <Shield size={18} style={{ color: "#2563eb" }} />
                 <h3 style={styles.modalTitle}>
-                  {editingMaterial
-                    ? "Adjust Pricing Configuration"
-                    : "Register Material Variant"}
+                  {editingClerk
+                    ? `Modify Operator: @${editingClerk.username}`
+                    : "Onboard Fresh Cabin Operator"}
                 </h3>
               </div>
               <button onClick={handleCloseModal} style={styles.modalCloseXBtn}>
@@ -353,19 +360,20 @@ export default function MaterialScreen() {
 
               <div style={styles.formFieldLayoutRow}>
                 <label style={styles.fieldLabelElement}>
-                  Material Variant Name
+                  Unique Operator Handle (Username)
                 </label>
                 <input
                   type="text"
-                  value={formData.name}
-                  disabled={editingMaterial !== null}
+                  placeholder="e.g., madan_sharma"
+                  value={formData.username}
+                  onChange={(e) =>
+                    setFormData({ ...formData, username: e.target.value })
+                  }
+                  disabled={editingClerk !== null} // Freeze internal identifiers from mutations
                   style={
-                    editingMaterial
+                    editingClerk
                       ? styles.disabledFormInput
                       : styles.formInputElement
-                  }
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
                   }
                   required
                 />
@@ -373,20 +381,44 @@ export default function MaterialScreen() {
 
               <div style={styles.formFieldLayoutRow}>
                 <label style={styles.fieldLabelElement}>
-                  Rate Applied Per Metric Ton (INR)
+                  Full Legal Operator Name
                 </label>
-                <div style={styles.currencyInputFrame}>
-                  <span style={styles.currencyPrefixSymbol}>₹</span>
+                <input
+                  type="text"
+                  placeholder="e.g., Madan Sharma"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  style={styles.formInputElement}
+                  required
+                />
+              </div>
+
+              <div style={styles.formFieldLayoutRow}>
+                <label style={styles.fieldLabelElement}>
+                  {editingClerk
+                    ? "Force Password Reset / Overwrite (Leave blank to keep old password)"
+                    : "Secure Account Password"}
+                </label>
+                <div style={styles.passwordInputFrame}>
+                  <Key
+                    size={14}
+                    style={{ color: "#64748b", marginLeft: 12, marginRight: 2 }}
+                  />
                   <input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.ratePerTon}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ratePerTon: e.target.value })
+                    type="text" // Kept as standard text format so the owner can accurately read/copy passwords they issue
+                    placeholder={
+                      editingClerk
+                        ? "•••••••• (Enter new sequence to swap)"
+                        : "Minimum 6 complex text bytes"
                     }
-                    style={styles.currencyInputField}
-                    required
+                    value={formData.password}
+                    onChange={(e) =>
+                      setFormData({ ...formData, password: e.target.value })
+                    }
+                    style={styles.passwordInputField}
+                    required={!editingClerk}
                   />
                 </div>
               </div>
@@ -405,7 +437,11 @@ export default function MaterialScreen() {
                   style={styles.saveSubmitBtn}
                   disabled={submitLoading}
                 >
-                  {submitLoading ? "Saving..." : "Commit Configuration Change"}
+                  {submitLoading
+                    ? "Saving Metrics..."
+                    : editingClerk
+                      ? "Overwrite Profile"
+                      : "Onboard Operator"}
                 </button>
               </div>
             </form>
@@ -414,39 +450,41 @@ export default function MaterialScreen() {
       )}
       <ConfirmationModal
         isOpen={confirmModal.isOpen}
-        onClose={() => setConfirmModal({ isOpen: false, item: null })}
-        onConfirm={handleExecuteToggle}
+        onClose={() => setConfirmModal({ isOpen: false, clerk: null })}
+        onConfirm={handleExecuteAccessShift}
         title={
-          confirmModal.item?.isActive
-            ? "Deactivate Material Variant"
-            : "Activate Material Variant"
+          confirmModal.clerk?.isActive
+            ? "Revoke System Access"
+            : "Restore Operator Access"
         }
         message={
-          confirmModal.item?.isActive
-            ? `Are you sure you want to hide "${confirmModal.item?.name}"?\n\nCabin clerks won't be able to log incoming weight tickets for this material type.`
-            : `Expose "${confirmModal.item?.name}" immediately?\n\nThis will instantly make this material type selectable across all active cabin weighbridge stations.`
+          confirmModal.clerk?.isActive
+            ? `⚠️ CRITICAL AUDIT WARNING\n\nAre you sure you want to revoke system access for ${confirmModal.clerk?.name} (@${confirmModal.clerk?.username})?\n\nThis will freeze their account. Any running batch session currently active in a weighbridge cabin will be invalidated instantly.`
+            : `Restore full weighbridge operational clearance to ${confirmModal.clerk?.name} (@${confirmModal.clerk?.username}) immediately?`
         }
-        actionText={confirmModal.item?.isActive ? "Deactivate" : "Activate"}
-        isDestructive={confirmModal.item?.isActive} // Red styling for deactivation, Blue for activation
+        actionText={
+          confirmModal.clerk?.isActive ? "Revoke Privileges" : "Grant Access"
+        }
+        isDestructive={confirmModal.clerk?.isActive}
       />
     </div>
   );
 }
 
-// 🎨 EXPANDED CSS STYLE DESIGNS MAP
+// 🎨 HIGH-DENSITY ADMINISTRATIVE VISUAL LAYOUT CSS
 const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // position: "relative",
+    // top: 0,
+    // bottom: 0,
+    // left: -40,
+    // right: 0,
     backgroundColor: "#f8fafc",
-    overflow: "hidden",
-    width: "100%",
-    boxSizing: "border-box",
+    // overflow: "hidden",
+    width: "fit-content",
+    // boxSizing: "border-box",
   },
   staticHeaderBlock: {
     padding: "10px 24px 16px 24px",
@@ -667,8 +705,8 @@ const styles = {
     padding: "8px 12px",
     fontSize: "13px",
     outline: "none",
-    color: "#0f172a",
     backgroundColor: "white",
+    color: "#0f172a",
   },
   disabledFormInput: {
     border: "1px solid #e2e8f0",
@@ -679,28 +717,23 @@ const styles = {
     color: "#64748b",
     cursor: "not-allowed",
   },
-  currencyInputFrame: {
+  passwordInputFrame: {
     display: "flex",
     alignItems: "center",
     border: "1px solid #cbd5e1",
     borderRadius: "6px",
-    backgroundColor: "#f8fafc",
+    backgroundColor: "#ffffff",
     overflow: "hidden",
   },
-  currencyPrefixSymbol: {
-    padding: "0 12px",
-    fontSize: "14px",
-    color: "#64748b",
-    fontWeight: "bold",
-  },
-  currencyInputField: {
+  passwordInputField: {
     border: "none",
-    backgroundColor: "#ffffff",
+    backgroundColor: "transparent",
     width: "100%",
-    padding: "8px 12px 8px 0",
+    padding: "8px 12px 8px 6px",
     fontSize: "13px",
     outline: "none",
     color: "#0f172a",
+    fontFamily: "inherit",
   },
   modalActionBarPair: {
     display: "flex",

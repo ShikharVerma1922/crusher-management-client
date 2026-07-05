@@ -2,12 +2,39 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
 import {
-  LineChart,
+  LineChart as LineChartIcon,
   Calendar,
   RefreshCw,
   AlertCircle,
   BarChart3,
 } from "lucide-react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
+
+const CustomTooltip = ({ active, payload, label }) => {
+  if (!active || !payload?.length) return null;
+
+  return (
+    <div style={styles.tooltip}>
+      <strong>{label}</strong>
+
+      <div>Revenue: ₹{payload[0].value.toLocaleString("en-IN")}</div>
+
+      <div>
+        Quantity:
+        {payload[1].value.toLocaleString()}
+      </div>
+    </div>
+  );
+};
 
 export default function AnalyticsExplorerScreen() {
   const { adminApi } = useContext(AdminContext);
@@ -16,7 +43,6 @@ export default function AnalyticsExplorerScreen() {
   const [loading, setLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState("");
   const [chartData, setChartData] = useState([]);
-  const [hoveredDataPoint, setHoveredDataPoint] = useState(null);
 
   const fetchTimelineData = useCallback(async () => {
     setLoading(true);
@@ -27,7 +53,7 @@ export default function AnalyticsExplorerScreen() {
       );
       const payload = response.data?.data || response.data;
       if (Array.isArray(payload)) {
-        setChartData(payload);
+        setChartData(Array.isArray(payload) ? payload : []);
       }
     } catch (error) {
       setErrorMessage(
@@ -41,66 +67,6 @@ export default function AnalyticsExplorerScreen() {
   useEffect(() => {
     fetchTimelineData();
   }, [fetchTimelineData]);
-
-  // 🎨 CONFIGURABLE GRAPH PADDING MATRICES
-  const svgWidth = 850; // Expanded width to hold left Y-axis labels cleanly
-  const svgHeight = 360; // Expanded height to accommodate bottom X-axis tags
-  const paddingLeft = 85;
-  const paddingRight = 40;
-  const paddingTop = 30;
-  const paddingBottom = 45;
-
-  const chartInnerWidth = svgWidth - paddingLeft - paddingRight;
-  const chartInnerHeight = svgHeight - paddingTop - paddingBottom;
-
-  // 📐 INTERCEPT AXIS MAX VALUES
-  const maxRevenue =
-    chartData.length > 0
-      ? Math.max(...chartData.map((d) => d.revenue), 10000)
-      : 10000;
-  const maxTonnage =
-    chartData.length > 0
-      ? Math.max(...chartData.map((d) => d.tonnage), 10)
-      : 10;
-
-  // 📐 MAP COORDINATE VECTORS TO INNER CANVAS PIXELS
-  const computeSvgPathCoordinates = (metricKey, maxValue) => {
-    if (chartData.length < 2) return [];
-
-    return chartData.map((point, index) => {
-      const x =
-        paddingLeft + (index / (chartData.length - 1)) * chartInnerWidth;
-      const normalizedY = point[metricKey] / maxValue;
-      const y = svgHeight - paddingBottom - normalizedY * chartInnerHeight;
-      return { x, y, data: point };
-    });
-  };
-
-  const revenueCoordinates = computeSvgPathCoordinates("revenue", maxRevenue);
-  const tonnageCoordinates = computeSvgPathCoordinates("tonnage", maxTonnage);
-  const buildSvgLineString = (coords) =>
-    coords.map((c, i) => `${i === 0 ? "M" : "L"} ${c.x} ${c.y}`).join(" ");
-
-  // 🎛️ SMART X-AXIS DENSITY REDUCER (Skips ticks so labels don't overlap on 30-day view)
-  const getFilteredXAxisTicks = () => {
-    if (chartData.length <= 8)
-      return chartData.map((d, i) => ({ index: i, label: d.timelineLabel }));
-
-    // Choose an interval step sizes dynamically to prevent clutter
-    const step = Math.ceil(chartData.length / 6);
-    const ticks = [];
-    for (let i = 0; i < chartData.length; i += step) {
-      ticks.push({ index: i, label: chartData[i].timelineLabel });
-    }
-    // Guarantee that the final date marker is always drawn at the right end wall boundary
-    if (ticks[ticks.length - 1].index !== chartData.length - 1) {
-      ticks.push({
-        index: chartData.length - 1,
-        label: chartData[chartData.length - 1].timelineLabel,
-      });
-    }
-    return ticks;
-  };
 
   return (
     <div style={styles.viewViewportContainer}>
@@ -120,13 +86,9 @@ export default function AnalyticsExplorerScreen() {
                 onChange={(e) => setTimePreset(e.target.value)}
                 style={styles.selectDropdownElement}
               >
-                <option value="last_7_days">Last 7 Operating Days</option>
-                <option value="last_30_days">
-                  Last 30 Days (Monthly Tonal Breakdown)
-                </option>
-                <option value="last_6_months">
-                  Last 6 Months (Macro Quotas)
-                </option>
+                <option value="last_7_days">Last 7 Days</option>
+                <option value="last_30_days">Last 30 Days</option>
+                <option value="last_6_months">Last 6 Months</option>
               </select>
             </div>
             <button
@@ -147,7 +109,7 @@ export default function AnalyticsExplorerScreen() {
               <div
                 style={{ display: "flex", alignItems: "center", gap: "8px" }}
               >
-                <LineChart size={18} style={{ color: "#2563eb" }} />
+                <LineChartIcon size={18} />
                 <h2 style={styles.panelTitle}>
                   Commercial Throughput Correlation Graph
                 </h2>
@@ -163,7 +125,7 @@ export default function AnalyticsExplorerScreen() {
                   <span
                     style={{ ...styles.legendDot, backgroundColor: "#2563eb" }}
                   ></span>{" "}
-                  Tonnage (Right Axis)
+                  Quantity (Right Axis)
                 </span>
               </div>
             </div>
@@ -185,204 +147,64 @@ export default function AnalyticsExplorerScreen() {
                 </p>
               </div>
             ) : (
-              <div style={styles.svgCanvasFrame}>
-                <svg
-                  width="100%"
-                  height="100%"
-                  viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-                  preserveAspectRatio="xMidYMid meet"
-                >
-                  {/* 📊 DYNAMIC HORIZONTAL GRID LINES & DUAL Y-AXIS LABELS */}
-                  {[0, 0.25, 0.5, 0.75, 1].map((ratio) => {
-                    const yPos = paddingTop + ratio * chartInnerHeight;
-                    // Invert calculation because SVG renders top-down
-                    const revenueValue = Math.round(maxRevenue * (1 - ratio));
-                    const tonnageValue = Math.round(maxTonnage * (1 - ratio));
-
-                    return (
-                      <g key={ratio}>
-                        {/* Background Grid Row Line */}
-                        <line
-                          x1={paddingLeft}
-                          y1={yPos}
-                          x2={svgWidth - paddingRight}
-                          y2={yPos}
-                          stroke="#f1f5f9"
-                          strokeWidth="1"
-                        />
-
-                        {/* LEFT Y-AXIS LABEL TEXT: Revenue (INR) */}
-                        <text
-                          x={paddingLeft - 12}
-                          y={yPos + 4}
-                          textAnchor="end"
-                          style={styles.axisLabelText}
-                          fill="#16a34a"
-                        >
-                          ₹
-                          {revenueValue >= 100000
-                            ? `${(revenueValue / 100000).toFixed(1)}L`
-                            : revenueValue.toLocaleString("en-IN")}
-                        </text>
-
-                        {/* RIGHT Y-AXIS LABEL TEXT: Tonnage (MT) */}
-                        <text
-                          x={svgWidth - paddingRight + 12}
-                          y={yPos + 4}
-                          textAnchor="start"
-                          style={styles.axisLabelText}
-                          fill="#2563eb"
-                        >
-                          {tonnageValue.toLocaleString()} MT
-                        </text>
-                      </g>
-                    );
-                  })}
-
-                  {/* 🛣️ SOLID CORE AXIS BORDER LINES */}
-                  <line
-                    x1={paddingLeft}
-                    y1={paddingTop}
-                    x2={paddingLeft}
-                    y2={svgHeight - paddingBottom}
-                    stroke="#cbd5e1"
-                    strokeWidth="1"
-                  />
-                  <line
-                    x1={paddingLeft}
-                    y1={svgHeight - paddingBottom}
-                    x2={svgWidth - paddingRight}
-                    y2={svgHeight - paddingBottom}
-                    stroke="#cbd5e1"
-                    strokeWidth="1"
-                  />
-                  <line
-                    x1={svgWidth - paddingRight}
-                    y1={paddingTop}
-                    x2={svgWidth - paddingRight}
-                    y2={svgHeight - paddingBottom}
-                    stroke="#cbd5e1"
-                    strokeWidth="1"
-                  />
-
-                  {/* 🗓️ DYNAMIC FILTER-BASED X-AXIS LABELS */}
-                  {getFilteredXAxisTicks().map((tick) => {
-                    const xPos =
-                      paddingLeft +
-                      (tick.index / (chartData.length - 1)) * chartInnerWidth;
-                    return (
-                      <g key={tick.index}>
-                        {/* Tiny notch index tick marker on axis line */}
-                        <line
-                          x1={xPos}
-                          y1={svgHeight - paddingBottom}
-                          x2={xPos}
-                          y2={svgHeight - paddingBottom + 5}
-                          stroke="#cbd5e1"
-                          strokeWidth="1"
-                        />
-                        {/* Text Date String Label */}
-                        <text
-                          x={xPos}
-                          y={svgHeight - paddingBottom + 20}
-                          textAnchor="middle"
-                          style={styles.xAxisLabelText}
-                        >
-                          {tick.label}
-                        </text>
-                      </g>
-                    );
-                  })}
-
-                  {/* 📈 COMPILATION DATA PATH LINES */}
-                  <path
-                    d={buildSvgLineString(revenueCoordinates)}
-                    fill="none"
-                    stroke="#16a34a"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d={buildSvgLineString(tonnageCoordinates)}
-                    fill="none"
-                    stroke="#2563eb"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-
-                  {/* 🎯 INVISIBLE ACTIVE ANCHOR INTERCEPTION HOVER NODES */}
-                  {revenueCoordinates.map((pt, idx) => {
-                    const xPercent =
-                      ((pt.x - paddingLeft) / chartInnerWidth) * 100;
-                    return (
-                      <g key={idx}>
-                        <circle
-                          cx={pt.x}
-                          cy={pt.y}
-                          r={hoveredDataPoint?.index === idx ? 6 : 0}
-                          fill="#16a34a"
-                          stroke="#ffffff"
-                          strokeWidth="2"
-                        />
-                        <circle
-                          cx={tonnageCoordinates[idx].x}
-                          cy={tonnageCoordinates[idx].y}
-                          r={hoveredDataPoint?.index === idx ? 6 : 0}
-                          fill="#2563eb"
-                          stroke="#ffffff"
-                          strokeWidth="2"
-                        />
-                        <circle
-                          cx={pt.x}
-                          cy={(pt.y + tonnageCoordinates[idx].y) / 2}
-                          r={24}
-                          fill="transparent"
-                          style={{ cursor: "pointer" }}
-                          onMouseEnter={() =>
-                            setHoveredDataPoint({
-                              index: idx,
-                              xPct: xPercent,
-                              ...pt.data,
-                            })
-                          }
-                          onMouseLeave={() => setHoveredDataPoint(null)}
-                        />
-                      </g>
-                    );
-                  })}
-                </svg>
-
-                {/* 🏷️ FIXED FLUID OVERLAY DATA MODAL ON HOVER */}
-                {hoveredDataPoint && (
-                  <div
-                    style={{
-                      ...styles.hoverTooltip,
-                      left: `calc(${paddingLeft}px + ${hoveredDataPoint.xPct}%)`,
+              <div style={styles.chartWrapper}>
+                <ResponsiveContainer width="100%" height={420}>
+                  <LineChart
+                    data={chartData}
+                    margin={{
+                      top: 20,
+                      right: 30,
+                      left: 20,
+                      bottom: 20,
                     }}
                   >
-                    <div style={styles.tooltipTimelineTag}>
-                      {hoveredDataPoint.timelineLabel}
-                    </div>
-                    <div
-                      style={{ ...styles.tooltipLineMetric, color: "#16a34a" }}
-                    >
-                      Revenue:{" "}
-                      <strong>
-                        ₹{hoveredDataPoint.revenue.toLocaleString("en-IN")}
-                      </strong>
-                    </div>
-                    <div
-                      style={{ ...styles.tooltipLineMetric, color: "#2563eb" }}
-                    >
-                      Volume:{" "}
-                      <strong>
-                        {hoveredDataPoint.tonnage.toLocaleString()} MT
-                      </strong>
-                    </div>
-                  </div>
-                )}
+                    <CartesianGrid strokeDasharray="3 3" />
+
+                    <XAxis dataKey="timelineLabel" />
+
+                    <YAxis
+                      yAxisId="revenue"
+                      tickFormatter={(v) =>
+                        `₹${Number(v).toLocaleString("en-IN")}`
+                      }
+                    />
+
+                    <YAxis
+                      yAxisId="quantity"
+                      orientation="right"
+                      tickFormatter={(v) => `${v}`}
+                    />
+
+                    <Tooltip
+                      content={<CustomTooltip />}
+                      animationDuration={0}
+                    />
+
+                    <Legend />
+
+                    <Line
+                      yAxisId="revenue"
+                      type="linear"
+                      dataKey="revenue"
+                      stroke="#16a34a"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 5 }}
+                      isAnimationActive={false}
+                    />
+
+                    <Line
+                      yAxisId="quantity"
+                      type="linear"
+                      dataKey="quantity"
+                      stroke="#2563eb"
+                      strokeWidth={3}
+                      dot={false}
+                      activeDot={{ r: 5 }}
+                      isAnimationActive={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
             )}
           </div>
@@ -399,8 +221,10 @@ export default function AnalyticsExplorerScreen() {
               <span style={styles.metaValueText}>
                 ₹
                 {(
-                  chartData.reduce((acc, curr) => acc + curr.revenue, 0) /
-                  (chartData.length || 1)
+                  chartData.reduce(
+                    (sum, item) => sum + Number(item.revenue ?? 0),
+                    0,
+                  ) / (chartData.length || 1)
                 ).toLocaleString("en-IN", { maximumFractionDigits: 0 })}
               </span>
             </div>
@@ -408,10 +232,10 @@ export default function AnalyticsExplorerScreen() {
               <span style={styles.metaLabelText}>Peak Output Single Spike</span>
               <span style={{ ...styles.metaValueText, color: "#2563eb" }}>
                 {Math.max(
-                  ...chartData.map((d) => d.tonnage),
+                  ...chartData.map((d) => Number(d.quantity ?? 0)),
                   0,
                 ).toLocaleString()}{" "}
-                MT
+                ft<sup>3</sup>
               </span>
             </div>
           </div>
@@ -513,6 +337,7 @@ const styles = {
     border: "1px solid #e2e8f0",
     borderRadius: "12px",
     padding: "20px",
+    paddingRight: "70px",
     position: "relative",
     overflow: "visible",
   },
@@ -540,12 +365,10 @@ const styles = {
   },
   legendDot: { width: "8px", height: "8px", borderRadius: "50%" },
 
-  svgCanvasFrame: {
+  chartWrapper: {
     width: "100%",
-    position: "relative",
-    display: "block",
-    backgroundColor: "#ffffff",
-    minHeight: "360px",
+    height: "420px",
+    outline: "none",
   },
   axisLabelText: {
     fontFamily: "monospace",

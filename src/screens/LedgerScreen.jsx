@@ -216,9 +216,9 @@ export default function LedgerScreen() {
   }
 
   return (
-    <div style={styles.viewViewportContainer}>
-      <div style={styles.staticHeaderBlock}>
-        <div style={styles.actionHeader}>
+    <div className="ledger-screen" style={styles.viewViewportContainer}>
+      <div className="ledger-static-header" style={styles.staticHeaderBlock}>
+        <div className="ledger-action-header" style={styles.actionHeader}>
           <div
             style={{
               display: "flex",
@@ -231,7 +231,10 @@ export default function LedgerScreen() {
             <span style={{ height: "15px" }}>Total Credit: {totalCredit}</span>
           </div>
           <button
-            onClick={() => exportToExcelFormat(tickets, startDate, endDate)}
+            className="ledger-export-button"
+            onClick={() =>
+              exportToExcelFormat(tickets, startDate, endDate, searchQuery)
+            }
             style={styles.exportButton}
           >
             <Download size={16} style={{ marginRight: 6 }} /> Export to Excel
@@ -239,8 +242,11 @@ export default function LedgerScreen() {
         </div>
 
         {/* 📊 PROFESSIONAL UNIFIED CONTROL RIBBON LAYOUT */}
-        <div style={styles.filterControlPanel}>
-          <div style={styles.searchContainer}>
+        <div className="ledger-filter-panel" style={styles.filterControlPanel}>
+          <div
+            className="ledger-search-container"
+            style={styles.searchContainer}
+          >
             <Search size={16} style={styles.searchIcon} />
             <input
               type="text"
@@ -270,9 +276,15 @@ export default function LedgerScreen() {
         )}
       </div>
 
-      <div style={styles.dynamicScrollBodyWrapper}>
-        <div style={styles.tableCardContainer}>
-          <div style={styles.overflowTableScroller}>
+      <div
+        className="ledger-scroll-body"
+        style={styles.dynamicScrollBodyWrapper}
+      >
+        <div className="ledger-table-card" style={styles.tableCardContainer}>
+          <div
+            className="ledger-table-scroller"
+            style={styles.overflowTableScroller}
+          >
             {loading ? (
               <div style={styles.loadingWrapperGrid}>
                 <div style={styles.spinnerElement}></div>
@@ -289,27 +301,41 @@ export default function LedgerScreen() {
                 </p>
               </div>
             ) : (
-              <table style={styles.masterTableElement}>
+              <table className="ledger-table" style={styles.masterTableElement}>
                 <thead style={styles.stickyTableHeader}>
                   <tr>
-                    <th width="90" style={styles.thElement}>
-                      Receipt No
+                    <th width="60" style={styles.thElement}>
+                      R No.
                     </th>
 
-                    <th style={styles.thElement}>Date/Time</th>
+                    <th width="120" style={styles.thElement}>
+                      Date/Time
+                    </th>
                     <th width="100" style={styles.thElement}>
                       Customer
                     </th>
-                    <th style={styles.thElement}>Vehicle No.</th>
-                    <th style={styles.thElement}>Site</th>
                     <th width="100" style={styles.thElement}>
+                      V No.
+                    </th>
+                    <th width="80" style={styles.thElement}>
+                      Site
+                    </th>
+                    <th width="80" style={styles.thElement}>
                       Material
                     </th>
 
-                    <th style={styles.thElement}>Quantity</th>
-                    <th style={styles.thElement}>Rate</th>
-                    <th style={styles.thElement}>Type</th>
-                    <th style={styles.thElement}>Total Amount</th>
+                    <th width="50" style={styles.thElement}>
+                      Quantity
+                    </th>
+                    <th width="50" style={styles.thElement}>
+                      Rate
+                    </th>
+                    <th width="50" style={styles.thElement}>
+                      Type
+                    </th>
+                    <th width="70" style={styles.thElement}>
+                      Amount
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -418,7 +444,7 @@ export default function LedgerScreen() {
                               }
                             }}
                             style={{
-                              width: "80px",
+                              width: "60px",
                               padding: "2px 4px",
                               border: "1px solid #cbd5e1",
                               borderRadius: "6px",
@@ -441,12 +467,15 @@ export default function LedgerScreen() {
             )}
           </div>
 
-          <div style={styles.paginationRow}>
+          <div className="ledger-pagination-row" style={styles.paginationRow}>
             <span style={styles.paginationText}>
               Page <strong>{currentPage}</strong> of{" "}
               <strong>{totalPages}</strong>
             </span>
-            <div style={styles.paginationButtonPair}>
+            <div
+              className="ledger-pagination-button-pair"
+              style={styles.paginationButtonPair}
+            >
               <button
                 disabled={currentPage === 1 || loading}
                 onClick={() => fetchLedgerData(currentPage - 1)}

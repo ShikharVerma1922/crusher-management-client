@@ -113,3 +113,168 @@ code {
   filter: brightness(0);
   cursor: pointer;
 }
+
+/* 1. Define the rotation keyframes */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* 2. Create a utility class to apply the animation */
+.animate-spin-custom {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive Grid Breakpoint Matrix */
+@media (max-width: 768px) {
+  /* Turn the tabular row container into a flat card */
+  .table-header {
+    display: none; /* Hide the long desktop header row on mobile */
+  }
+
+  .table-row {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+  }
+
+  /* Make columns span full width and stack vertically */
+  .col {
+    width: 100%;
+    padding-bottom: 6px;
+    text-align: left !important; /* Force left alignment for standard mobile readability */
+  }
+
+  /* Highlight the final total prominently at the bottom of the stacked card */
+  .col-amount {
+    border-top: 1px dashed #e2e8f0;
+    padding-top: 10px;
+    margin-top: 4px;
+    font-size: 16px;
+  }
+
+  html,
+  body,
+  #root {
+    overflow-x: hidden;
+  }
+
+  body {
+    min-height: 100dvh;
+  }
+
+  .dashboard-screen,
+  .ledger-screen {
+    position: relative;
+  }
+
+  .dashboard-static-header,
+  .ledger-static-header {
+    padding: 12px 12px 12px 12px;
+  }
+
+  .dashboard-filter-panel,
+  .ledger-filter-panel {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .dashboard-window-label {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .dashboard-date-picker-wrapper,
+  .date-range-filter {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .dashboard-dropdown-input-group,
+  .dashboard-date-input-group,
+  .date-range-dropdown,
+  .date-range-date-input {
+    width: 100%;
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
+  .dashboard-refresh-button,
+  .date-range-refresh-button {
+    width: 100%;
+    height: 36px;
+  }
+
+  .dashboard-scroll-body,
+  .ledger-scroll-body {
+    padding: 12px;
+  }
+
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .dashboard-kpi-card,
+  .dashboard-table-card,
+  .ledger-table-card {
+    padding: 14px;
+  }
+
+  .dashboard-kpi-card {
+    align-items: flex-start;
+  }
+
+  .dashboard-icon-badge {
+    margin-right: 12px;
+  }
+
+  .dashboard-table-wrapper,
+  .ledger-table-scroller {
+    overflow-x: auto;
+  }
+
+  .dashboard-table,
+  .ledger-table {
+    min-width: 720px;
+  }
+
+  .ledger-action-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .ledger-export-button {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .ledger-search-container {
+    width: 100%;
+  }
+
+  .ledger-filter-panel {
+    flex-wrap: wrap;
+  }
+
+  .ledger-pagination-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .ledger-pagination-button-pair {
+    width: 100%;
+    justify-content: space-between;
+  }
+}

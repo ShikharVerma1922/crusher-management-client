@@ -12,13 +12,14 @@ import {
   AlertCircle,
   Layers,
 } from "lucide-react";
+import DateRangeFilter from "../components/DateRangeFilter.jsx";
 
 export default function DashboardScreen() {
   const { adminApi } = useContext(AdminContext);
 
   const [vitals, setVitals] = useState({
     totalRevenue: 0,
-    totalTonnageShifted: 0,
+    totalQuantity: 0,
     totalTrucksCleared: 0,
     activeOpenShifts: 0,
   });
@@ -114,7 +115,7 @@ export default function DashboardScreen() {
       if (response.data && payload) {
         setVitals({
           totalRevenue: payload.summary?.totalRevenue || 0,
-          totalTonnageShifted: payload.summary?.totalTonnageShifted || 0,
+          totalQuantity: payload.summary?.totalQuantity || 0,
           totalTrucksCleared: payload.summary?.totalTrucksCleared || 0,
           activeOpenShifts: payload.summary?.activeOpenShifts || 0,
         });
@@ -134,17 +135,21 @@ export default function DashboardScreen() {
   }, [startDate, endDate, fetchDashboardAnalytics]);
 
   return (
-    <div style={styles.viewViewportContainer}>
+    <div className="dashboard-screen" style={styles.viewViewportContainer}>
       {/* 📌 LOCKED STATIC TOP BANNER: This section will NEVER scroll or move */}
-      <div style={styles.staticHeaderBlock}>
-        <div style={styles.actionHeader}>
+      <div className="dashboard-static-header" style={styles.staticHeaderBlock}>
+        {/* <div style={styles.actionHeader}>
           <div>
             <h1 style={styles.pageTitle}>DASHBOARD</h1>
           </div>
-        </div>
+        </div> */}
 
-        <div style={styles.filterControlPanel}>
+        <div
+          className="dashboard-filter-panel"
+          style={styles.filterControlPanel}
+        >
           <div
+            className="dashboard-window-label"
             style={{
               display: "flex",
               alignItems: "center",
@@ -157,49 +162,19 @@ export default function DashboardScreen() {
             <Calendar size={16} /> Operational Window Context
           </div>
 
-          <div style={styles.datePickerWrapper}>
-            <div style={styles.dropdownInputGroup}>
-              <SlidersHorizontal
-                size={14}
-                style={{ color: "#64748b", marginRight: 6 }}
-              />
-              <select
-                value={dateRangePreset}
-                onChange={(e) => setDateRangePreset(e.target.value)}
-                style={styles.selectDropdownElement}
-              >
-                <option value="today">Today</option>
-                <option value="this_week">This Week</option>
-                <option value="this_month">This Month</option>
-                <option value="this_year">This Year</option>
-                <option value="last_7_days">Last 7 Days</option>
-                <option value="last_30_days">Last 30 Days</option>
-              </select>
-            </div>
-            <div style={styles.dateInputGroupReadOnly}>
-              <input
-                type="date"
-                value={startDate}
-                readOnly
-                style={styles.dateField}
-              />
-            </div>
-            <span style={{ color: "#94a3b8", fontSize: "12px" }}>➔</span>
-            <div style={styles.dateInputGroupReadOnly}>
-              <input
-                type="date"
-                value={endDate}
-                readOnly
-                style={styles.dateField}
-              />
-            </div>
-            <button
-              onClick={fetchDashboardAnalytics}
-              style={styles.refreshButton}
-              title="Force Recompute Live Streams"
-            >
-              <RefreshCw size={14} />
-            </button>
+          <div
+            className="dashboard-date-picker-wrapper"
+            style={styles.datePickerWrapper}
+          >
+            <DateRangeFilter
+              dateRangePreset={dateRangePreset}
+              setDateRangePreset={setDateRangePreset}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              onFetchData={() => fetchDashboardAnalytics()}
+            />
           </div>
         </div>
 
@@ -212,7 +187,10 @@ export default function DashboardScreen() {
       </div>
 
       {/* 🌊 ISOLATED SCROLL SHELL AREA: Only the metrics below will scroll vertically */}
-      <div style={styles.dynamicScrollBodyWrapper}>
+      <div
+        className="dashboard-scroll-body"
+        style={styles.dynamicScrollBodyWrapper}
+      >
         {loading ? (
           <div style={styles.loadingWrapperGrid}>
             <div style={styles.spinnerElement}></div>
@@ -223,8 +201,11 @@ export default function DashboardScreen() {
         ) : (
           <div style={styles.dashboardGridRowsArea}>
             {/* KPI METRICS OVERVIEW CARD LAYOUT GRID */}
-            <div style={styles.kpiCardsGridContainer}>
-              <div style={styles.kpiCardElement}>
+            <div
+              className="dashboard-kpi-grid"
+              style={styles.kpiCardsGridContainer}
+            >
+              <div className="dashboard-kpi-card" style={styles.kpiCardElement}>
                 <div
                   style={{
                     ...styles.iconBadgeWrapper,
@@ -257,11 +238,12 @@ export default function DashboardScreen() {
                   <Scale size={20} />
                 </div>
                 <div style={styles.kpiDataLabelColumn}>
-                  <span style={styles.kpiMetaTextTitle}>Tonnage Shifted</span>
+                  <span style={styles.kpiMetaTextTitle}>Total quantity</span>
                   <span style={styles.kpiValueMetricsValue}>
-                    {vitals.totalTonnageShifted.toLocaleString()}{" "}
+                    {vitals.totalQuantity.toLocaleString()}{" "}
                     <span style={{ fontSize: "13px", color: "#64748b" }}>
-                      MT
+                      {" "}
+                      ft<sup>3</sup>
                     </span>
                   </span>
                 </div>
@@ -316,16 +298,23 @@ export default function DashboardScreen() {
             </div>
 
             {/* MATERIAL DISPATCH BREAKDOWN TARGET MATRIX DATA TABLE */}
-            <div style={styles.tableBlockSegmentContainer}>
+            <div
+              className="dashboard-table-card"
+              style={styles.tableBlockSegmentContainer}
+            >
               <div style={styles.segmentHeadingHeader}>
                 <Layers size={18} style={{ color: "#475569" }} />
-                <h2 style={styles.segmentTitleLabel}>
-                  Production Breakdown Segmented by Material Variants
-                </h2>
+                <h2 style={styles.segmentTitleLabel}>Production Breakdown</h2>
               </div>
 
-              <div style={styles.tableBorderGridWrapper}>
-                <table style={styles.materialDataGridTable}>
+              <div
+                className="dashboard-table-wrapper"
+                style={styles.tableBorderGridWrapper}
+              >
+                <table
+                  className="dashboard-table"
+                  style={styles.materialDataGridTable}
+                >
                   <thead>
                     <tr style={styles.gridHeaderElementRow}>
                       <th style={styles.tableThCellLabel}>
@@ -379,7 +368,7 @@ export default function DashboardScreen() {
                               fontWeight: "600",
                             }}
                           >
-                            {row.tonnageShifted.toLocaleString()} MT
+                            {row.totalQuantity.toLocaleString()}
                           </td>
                           <td
                             style={{

@@ -18,7 +18,9 @@ import {
   LogOut,
   Building2,
   ShieldAlert,
+  Settings,
 } from "lucide-react";
+import Setting from "./screens/Setting.jsx";
 
 export default function App() {
   const { isAdminAuthenticated, globalLoading, adminLogout, currentAdmin } =
@@ -33,6 +35,7 @@ export default function App() {
       "clerks",
       "trends",
       "voids",
+      "settings",
     ];
     return verifiedValidRoutes.includes(activeHashString)
       ? activeHashString
@@ -160,7 +163,7 @@ export default function App() {
       <aside style={styles.sidebarWrapper}>
         <nav style={styles.sidebarNavigationRibbon}>
           {/* Dashboard Tab */}
-          {/* <div
+          <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("dashboard")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -178,7 +181,7 @@ export default function App() {
             {hoveredTab === "dashboard" && (
               <div style={styles.floatingTooltip}>Executive Panel</div>
             )}
-          </div> */}
+          </div>
 
           {/* Weighbridge Ledger Tab */}
           <div
@@ -202,7 +205,7 @@ export default function App() {
           </div>
 
           {/* Data Explorer Tab */}
-          {/* <div
+          <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("trends")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -220,7 +223,7 @@ export default function App() {
             {hoveredTab === "trends" && (
               <div style={styles.floatingTooltip}>Data Explorer</div>
             )}
-          </div> */}
+          </div>
 
           {/* Pricing Matrix Tab */}
           {/* <div
@@ -265,7 +268,7 @@ export default function App() {
           </div> */}
 
           {/* Void Clearances Tab */}
-          {/* <div
+          <div
             style={styles.navItemContainer}
             onMouseEnter={() => setHoveredTab("voids")}
             onMouseLeave={() => setHoveredTab(null)}
@@ -283,7 +286,27 @@ export default function App() {
             {hoveredTab === "voids" && (
               <div style={styles.floatingTooltip}>Void Clearances</div>
             )}
-          </div> */}
+          </div>
+          {/* Settings page */}
+          <div
+            style={styles.navItemContainer}
+            onMouseEnter={() => setHoveredTab("settings")}
+            onMouseLeave={() => setHoveredTab(null)}
+          >
+            <button
+              onClick={() => setCurrentTab("settings")}
+              style={
+                currentTab === "settings"
+                  ? styles.sideTabButtonActive
+                  : styles.sideTabButton
+              }
+            >
+              <Settings size={18} style={{ flexShrink: 0 }} />
+            </button>
+            {hoveredTab === "settings" && (
+              <div style={styles.floatingTooltip}>Settings</div>
+            )}
+          </div>
         </nav>
       </aside>
 
@@ -295,6 +318,7 @@ export default function App() {
         {currentTab === "materials" && <MaterialScreen />}
         {currentTab === "clerks" && <ClerkScreen />}
         {currentTab === "voids" && <VoidRequestsScreen />}
+        {currentTab === "settings" && <Setting />}
       </main>
     </div>
   );

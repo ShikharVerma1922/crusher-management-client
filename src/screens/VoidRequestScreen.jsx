@@ -7,6 +7,8 @@ import {
   ShieldAlert,
   ChevronLeft,
   ChevronRight,
+  MessageSquare,
+  Pencil,
 } from "lucide-react";
 
 export default function VoidRequestsScreen() {
@@ -24,6 +26,8 @@ export default function VoidRequestsScreen() {
 
   const [processingId, setProcessingId] = useState(null);
   const [adminNotesMap, setAdminNotesMap] = useState({});
+
+  const [expandedNotesId, setExpandedNotesId] = useState(null);
 
   const fetchTabData = useCallback(async () => {
     setLoading(true);
@@ -93,7 +97,7 @@ export default function VoidRequestsScreen() {
       <div style={styles.staticHeaderBlock}>
         <div style={styles.actionHeader}>
           <div>
-            <h1 style={styles.pageTitle}>TICKET VOID ADJUSTMENTS</h1>
+            <h1 style={styles.pageTitle}>VOID REQUESTS</h1>
           </div>
           <button onClick={fetchTabData} style={styles.refreshButton}>
             Refresh Data Registry
@@ -172,37 +176,37 @@ export default function VoidRequestsScreen() {
             <table style={styles.compactTable}>
               <thead>
                 <tr style={styles.thRow}>
+                  <th width="80" style={styles.tableHeaderCell}>
+                    Receipt
+                  </th>
                   <th width="90" style={styles.tableHeaderCell}>
                     Date
                   </th>
                   <th width="120" style={styles.tableHeaderCell}>
-                    Operator
-                  </th>
-                  <th width="80" style={styles.tableHeaderCell}>
-                    Receipt #
+                    Customer
                   </th>
                   <th width="90" style={styles.tableHeaderCell}>
-                    Vehicle No
+                    Vehicle
                   </th>
                   <th width="140" style={styles.tableHeaderCell}>
-                    Material Grade
+                    Material
                   </th>
                   <th width="90" style={styles.tableHeaderCell}>
-                    Net Wt. (kg)
+                    Quantity
                   </th>
                   <th width="70" style={styles.tableHeaderCell}>
-                    Bill (INR)
+                    Amount
                   </th>
 
                   {/* The text explanation rows inherit the remaining structural space fluidly */}
-                  <th style={{ ...styles.tableHeaderCell, minWidth: "190px" }}>
+                  <th style={{ ...styles.tableHeaderCell, minWidth: "100px" }}>
                     Operator Reason Notes
                   </th>
                   <th
                     style={{
                       ...styles.tableHeaderCell,
                       textAlign: "right",
-                      minWidth: "210px",
+                      minWidth: "250px",
                     }}
                   >
                     Resolution Actions / Comments
@@ -212,6 +216,9 @@ export default function VoidRequestsScreen() {
               <tbody>
                 {requests.map((req) => (
                   <tr key={req.id} style={styles.tbRow}>
+                    <td style={styles.tableBodyCell}>
+                      #{req.transaction?.receiptNumber}
+                    </td>
                     <td
                       style={{
                         ...styles.tableBodyCell,
@@ -221,11 +228,9 @@ export default function VoidRequestsScreen() {
                       {new Date(req.createdAt).toLocaleDateString("en-IN")}
                     </td>
                     <td style={styles.tableBodyCell}>
-                      <strong>{req.requestedBy?.name}</strong>
+                      <strong>{req.transaction?.customerName}</strong>
                     </td>
-                    <td style={styles.tableBodyCell}>
-                      #{req.transaction?.receiptNumber}
-                    </td>
+
                     <td
                       style={{
                         ...styles.tableBodyCell,
@@ -253,7 +258,7 @@ export default function VoidRequestsScreen() {
                         textOverflow: "ellipsis",
                       }}
                     >
-                      {req.transaction?.netWeight?.toLocaleString()}
+                      {req.transaction?.quantity?.toLocaleString()}
                     </td>
                     <td
                       style={{
@@ -285,37 +290,54 @@ export default function VoidRequestsScreen() {
                     <td style={{ ...styles.tableBodyCell, textAlign: "right" }}>
                       {activeTab === "PENDING" ? (
                         <div style={styles.inlineActionForm}>
-                          <input
-                            type="text"
-                            placeholder="Add clearance note..."
-                            value={adminNotesMap[req.id] || ""}
-                            onChange={(e) =>
-                              setAdminNotesMap((prev) => ({
-                                ...prev,
-                                [req.id]: e.target.value,
-                              }))
-                            }
-                            style={styles.inlineTextInput}
-                            disabled={processingId === req.id}
-                          />
-                          <button
-                            onClick={() =>
-                              handleProcessRequest(req.id, "APPROVED")
-                            }
-                            style={styles.inlineApproveBtn}
-                            disabled={processingId !== null}
-                          >
-                            Void
-                          </button>
-                          <button
-                            onClick={() =>
-                              handleProcessRequest(req.id, "REJECTED")
-                            }
-                            style={styles.inlineRejectBtn}
-                            disabled={processingId !== null}
-                          >
-                            Reject
-                          </button>
+                          <div style={styles.inlineButtonRow}>
+                            <button
+                              onClick={() =>
+                                handleProcessRequest(req.id, "APPROVED")
+                              }
+                              style={styles.inlineApproveBtn}
+                              disabled={processingId !== null}
+                            >
+                              Approve
+                            </button>
+                            <button
+                              onClick={() =>
+                                handleProcessRequest(req.id, "REJECTED")
+                              }
+                              style={styles.inlineRejectBtn}
+                              disabled={processingId !== null}
+                            >
+                              Reject
+                            </button>
+                            <button
+                              type="button"
+                              style={styles.noteToggleBtn}
+                              onClick={() =>
+                                setExpandedNotesId(
+                                  expandedNotesId === req.id ? null : req.id,
+                                )
+                              }
+                            >
+                              <Pencil size={14} />
+                            </button>
+                          </div>
+
+                          {expandedNotesId === req.id && (
+                            <textarea
+                              rows={2}
+                              placeholder="Add clearance note..."
+                              value={adminNotesMap[req.id] || ""}
+                              onChange={(e) =>
+                                setAdminNotesMap((prev) => ({
+                                  ...prev,
+
+                                  [req.id]: e.target.value,
+                                }))
+                              }
+                              style={styles.inlineTextarea}
+                              disabled={processingId === req.id}
+                            />
+                          )}
                         </div>
                       ) : (
                         <span
@@ -504,20 +526,38 @@ const styles = {
   // Inline actions grid
   inlineActionForm: {
     display: "flex",
-    alignItems: "center",
-    justifyContent: "flex-end",
+    flexDirection: "column",
+    alignItems: "flex-end",
     gap: "6px",
-    flexWrap: "wrap",
   },
-  inlineTextInput: {
-    backgroundColor: "#ffffff",
+  inlineButtonRow: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+  },
+  noteToggleBtn: {
+    width: "24px",
+    height: "24px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
     border: "1px solid #cbd5e1",
     borderRadius: "4px",
-    padding: "4px 8px",
+    backgroundColor: "#ffffff",
+    color: "#475569",
+    cursor: "pointer",
+  },
+  inlineTextarea: {
+    width: "220px",
+    minHeight: "54px",
+    resize: "vertical",
+    backgroundColor: "#ffffff",
+    border: "1px solid #cbd5e1",
+    borderRadius: "6px",
+    padding: "6px 8px",
     fontSize: "11px",
+    color: "#000",
     outline: "none",
-    width: "180px",
-    color: "black",
   },
   inlineApproveBtn: {
     border: "none",

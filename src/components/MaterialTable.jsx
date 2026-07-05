@@ -4,7 +4,7 @@ import { AdminContext } from "../context/AdminContext.jsx";
 import { Layers, Plus, Edit2, X, AlertCircle, Eye, EyeOff } from "lucide-react";
 import ConfirmationModal from "../components/ConfirmationModal.jsx";
 
-export default function MaterialScreen() {
+export default function MaterialTable() {
   const { adminApi } = useContext(AdminContext);
 
   const [materials, setMaterials] = useState([]);
@@ -14,7 +14,7 @@ export default function MaterialScreen() {
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMaterial, setEditingMaterial] = useState(null);
-  const [formData, setFormData] = useState({ name: "", ratePerTon: "" });
+  const [formData, setFormData] = useState({ name: "" });
 
   const [confirmModal, setConfirmModal] = useState({
     isOpen: false,
@@ -116,18 +116,17 @@ export default function MaterialScreen() {
       setEditingMaterial(material);
       setFormData({
         name: material.name,
-        ratePerTon: material.ratePerTon.toString(),
       });
     } else {
       setEditingMaterial(null);
-      setFormData({ name: "", ratePerTon: "" });
+      setFormData({ name: "" });
     }
     setIsModalOpen(true);
   };
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
-    setFormData({ name: "", ratePerTon: "" });
+    setFormData({ name: "" });
     setEditingMaterial(null);
   };
 
@@ -170,9 +169,6 @@ export default function MaterialScreen() {
     <div style={styles.viewViewportContainer}>
       <div style={styles.staticHeaderBlock}>
         <div style={styles.actionHeader}>
-          <div>
-            <h1 style={styles.pageTitle}>MATERIAL PRICING</h1>
-          </div>
           <button
             onClick={() => handleOpenModal(null)}
             style={styles.createButton}
@@ -198,7 +194,7 @@ export default function MaterialScreen() {
                 <p
                   style={{ marginTop: 12, color: "#64748b", fontSize: "13px" }}
                 >
-                  Syncing aggregate rates matrix...
+                  Syncing aggregate material matrix...
                 </p>
               </div>
             ) : materials.length === 0 ? (
@@ -211,9 +207,7 @@ export default function MaterialScreen() {
               <table style={styles.masterTableElement}>
                 <thead style={styles.stickyTableHeader}>
                   <tr>
-                    <th style={styles.thElement}>Variant Code</th>
                     <th style={styles.thElement}>Material Nomenclature</th>
-                    <th style={styles.thElement}>Commercial Rate</th>
                     <th style={styles.thElement}>Visibility Status</th>
                     <th style={styles.thElement}>System Control Matrix</th>
                   </tr>
@@ -230,40 +224,11 @@ export default function MaterialScreen() {
                       <td
                         style={{
                           ...styles.tdElement,
-                          fontFamily: "monospace",
-                          color: "#64748b",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {item.id.slice(0, 8).toUpperCase()}
-                      </td>
-                      <td
-                        style={{
-                          ...styles.tdElement,
                           fontWeight: "700",
                           color: "#0f172a",
                         }}
                       >
                         {item.name}
-                      </td>
-                      <td
-                        style={{
-                          ...styles.tdElement,
-                          fontWeight: "800",
-                          color: "#2563eb",
-                          fontSize: "14px",
-                        }}
-                      >
-                        ₹{item.ratePerTon?.toLocaleString("en-IN") || "N/A"}{" "}
-                        <span
-                          style={{
-                            fontSize: "11px",
-                            color: "#64748b",
-                            fontWeight: "500",
-                          }}
-                        >
-                          / MT
-                        </span>
                       </td>
                       <td style={styles.tdElement}>
                         <span
@@ -278,14 +243,6 @@ export default function MaterialScreen() {
                       </td>
                       <td style={styles.tdElement}>
                         <div style={{ display: "flex", gap: "8px" }}>
-                          <button
-                            onClick={() => handleOpenModal(item)}
-                            style={styles.editActionLink}
-                          >
-                            <Edit2 size={13} style={{ marginRight: 4 }} />{" "}
-                            Adjust Rate
-                          </button>
-
                           {/* 🌟 THE ACTIVATE / DISABLE SLIDER ACTION TOGGLE BUTTON */}
                           <button
                             onClick={() => triggerToggleConfirmation(item)}
@@ -371,26 +328,6 @@ export default function MaterialScreen() {
                 />
               </div>
 
-              <div style={styles.formFieldLayoutRow}>
-                <label style={styles.fieldLabelElement}>
-                  Rate Applied Per Metric Ton (INR)
-                </label>
-                <div style={styles.currencyInputFrame}>
-                  <span style={styles.currencyPrefixSymbol}>₹</span>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="0.00"
-                    value={formData.ratePerTon}
-                    onChange={(e) =>
-                      setFormData({ ...formData, ratePerTon: e.target.value })
-                    }
-                    style={styles.currencyInputField}
-                    required
-                  />
-                </div>
-              </div>
-
               <div style={styles.modalActionBarPair}>
                 <button
                   type="button"
@@ -438,15 +375,15 @@ const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    // position: "relative",
+    // top: 0,
+    // bottom: 0,
+    // left: -60,
+    // right: 0,
     backgroundColor: "#f8fafc",
     overflow: "hidden",
-    width: "100%",
-    boxSizing: "border-box",
+    width: "fit-content",
+    // boxSizing: "border-box",
   },
   staticHeaderBlock: {
     padding: "10px 24px 16px 24px",

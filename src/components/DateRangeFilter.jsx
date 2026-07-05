@@ -15,9 +15,9 @@ export default function DateRangeFilter({
   isLoading = false,
 }) {
   return (
-    <div style={styles.datePickerWrapper}>
+    <div className="date-range-filter" style={styles.datePickerWrapper}>
       {/* 🌟 PRESET TIMELINE QUICK DROPDOWN */}
-      <div style={styles.dropdownInputGroup}>
+      <div className="date-range-dropdown" style={styles.dropdownInputGroup}>
         <SlidersHorizontal
           size={14}
           style={{ color: "#64748b", marginRight: 6 }}
@@ -86,6 +86,7 @@ export default function DateRangeFilter({
 
       {/* 🔄 FORCE SYNC ACTION BUTTON */}
       <button
+        className="date-range-refresh-button"
         onClick={onFetchData}
         style={styles.refreshButton}
         title="Force Reload Data"

@@ -242,11 +242,10 @@ export default function ClerkScreen() {
               <table style={styles.masterTableElement}>
                 <thead style={styles.stickyTableHeader}>
                   <tr>
-                    <th style={styles.thElement}>Operator Profile ID</th>
-                    <th style={styles.thElement}>Full Nomenclature</th>
-                    <th style={styles.thElement}>System Username Handler</th>
+                    <th style={styles.thElement}>Operator Name</th>
+                    <th style={styles.thElement}>System Username</th>
                     <th style={styles.thElement}>Terminal Access Status</th>
-                    <th style={styles.thElement}>Account Control Matrix</th>
+                    <th style={styles.thElement}>Account Controls</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -258,16 +257,6 @@ export default function ClerkScreen() {
                         opacity: clerk.isActive ? 1 : 0.6,
                       }}
                     >
-                      <td
-                        style={{
-                          ...styles.tdElement,
-                          fontFamily: "monospace",
-                          color: "#64748b",
-                          fontSize: "12px",
-                        }}
-                      >
-                        {clerk.id.slice(0, 8).toUpperCase()}
-                      </td>
                       <td
                         style={{
                           ...styles.tdElement,
