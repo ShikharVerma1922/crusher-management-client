@@ -187,6 +187,7 @@ const styles = {
     flex: 1,
     padding: "16px 24px",
     overflowY: "auto",
+    overflowX: "hidden",
     width: "100%",
     boxSizing: "border-box",
   },
@@ -196,5 +197,6 @@ const styles = {
     width: "100%",
     maxWidth: "100%",
     boxSizing: "border-box",
+    minWidth: 0,
   },
 };
