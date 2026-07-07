@@ -200,9 +200,15 @@ export default function MaterialTable() {
               <table style={styles.masterTableElement}>
                 <thead style={styles.stickyTableHeader}>
                   <tr>
-                    <th style={styles.thElement}>Material Nomenclature</th>
-                    <th style={styles.thElement}>Visibility Status</th>
-                    <th style={styles.thElement}>System Control Matrix</th>
+                    <th style={{ ...styles.thElement, width: "50%" }}>
+                      Material Nomenclature
+                    </th>
+                    <th style={{ ...styles.thElement, width: "20%" }}>
+                      Visibility Status
+                    </th>
+                    <th style={{ ...styles.thElement, width: "30%" }}>
+                      System Control Matrix
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -235,7 +241,16 @@ export default function MaterialTable() {
                         </span>
                       </td>
                       <td style={styles.tdElement}>
-                        <div style={{ display: "flex", gap: "8px" }}>
+                        <div
+                          style={{
+                            display: "flex",
+                            flexWrap: "wrap",
+                            gap: "8px",
+                            alignItems: "center",
+                            width: "100%",
+                            minWidth: 0,
+                          }}
+                        >
                           {/* 🌟 THE ACTIVATE / DISABLE SLIDER ACTION TOGGLE BUTTON */}
                           <button
                             onClick={() => triggerToggleConfirmation(item)}
@@ -375,7 +390,7 @@ const styles = {
     // right: 0,
     backgroundColor: "#f8fafc",
     overflow: "hidden",
-    width: "fit-content",
+    width: "100%",
     // boxSizing: "border-box",
   },
   staticHeaderBlock: {
@@ -441,10 +456,11 @@ const styles = {
     overflow: "hidden",
     width: "100%",
   },
-  overflowTableScroller: { overflowX: "auto", width: "100%" },
+  overflowTableScroller: { overflowX: "hidden", width: "100%" },
   masterTableElement: {
     width: "100%",
     borderCollapse: "collapse",
+    tableLayout: "fixed",
     textAlign: "left",
     fontSize: "13px",
   },
@@ -457,6 +473,8 @@ const styles = {
     fontSize: "11px",
     letterSpacing: "0.5px",
     backgroundColor: "#0f172a",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
   },
   tableBodyRowElement: {
     borderBottom: "1px solid #f1f5f9",
@@ -465,8 +483,10 @@ const styles = {
   tdElement: {
     padding: "14px 16px",
     color: "#334155",
-    whiteSpace: "nowrap",
     verticalAlign: "middle",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    overflowWrap: "anywhere",
   },
 
   badgeActive: {

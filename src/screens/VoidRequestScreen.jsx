@@ -9,6 +9,7 @@ import {
   ChevronRight,
   MessageSquare,
   Pencil,
+  RefreshCw,
 } from "lucide-react";
 
 export default function VoidRequestsScreen() {
@@ -95,57 +96,58 @@ export default function VoidRequestsScreen() {
     <div style={styles.viewViewportContainer}>
       {/* HEADER STRIP */}
       <div style={styles.staticHeaderBlock}>
-        <div style={styles.actionHeader}>
+        {/* <div style={styles.actionHeader}>
           <div>
             <h1 style={styles.pageTitle}>VOID REQUESTS</h1>
           </div>
-          <button onClick={fetchTabData} style={styles.refreshButton}>
-            Refresh Data Registry
-          </button>
-        </div>
+        </div> */}
 
         {/* CONTROLS STRIP */}
-        <div style={styles.tabBarWrapper}>
-          <button
-            onClick={() => setActiveTab("PENDING")}
-            style={
-              activeTab === "PENDING"
-                ? styles.tabButtonActive
-                : styles.tabButton
-            }
-          >
-            Pending Clearances
-          </button>
-          <button
-            onClick={() => setActiveTab("APPROVED")}
-            style={
-              activeTab === "APPROVED"
-                ? {
-                    ...styles.tabButtonActive,
-                    color: "#16a34a",
-                    borderBottomColor: "#16a34a",
-                  }
-                : styles.tabButton
-            }
-          >
-            Approved History
-          </button>
-          <button
-            onClick={() => setActiveTab("REJECTED")}
-            style={
-              activeTab === "REJECTED"
-                ? {
-                    ...styles.tabButtonActive,
-                    color: "#dc2626",
-                    borderBottomColor: "#dc2626",
-                  }
-                : styles.tabButton
-            }
-          >
-            Rejected Logs
+        <div style={{ display: "flex", justifyContent: "space-between" }}>
+          <div style={styles.tabBarWrapper}>
+            <button
+              onClick={() => setActiveTab("PENDING")}
+              style={
+                activeTab === "PENDING"
+                  ? styles.tabButtonActive
+                  : styles.tabButton
+              }
+            >
+              Pending Clearances
+            </button>
+            <button
+              onClick={() => setActiveTab("APPROVED")}
+              style={
+                activeTab === "APPROVED"
+                  ? {
+                      ...styles.tabButtonActive,
+                      color: "#16a34a",
+                      borderBottomColor: "#16a34a",
+                    }
+                  : styles.tabButton
+              }
+            >
+              Approved History
+            </button>
+            <button
+              onClick={() => setActiveTab("REJECTED")}
+              style={
+                activeTab === "REJECTED"
+                  ? {
+                      ...styles.tabButtonActive,
+                      color: "#dc2626",
+                      borderBottomColor: "#dc2626",
+                    }
+                  : styles.tabButton
+              }
+            >
+              Rejected Logs
+            </button>
+          </div>
+          <button onClick={fetchTabData} style={styles.refreshButton}>
+            <RefreshCw size={14} />
           </button>
         </div>
-
         {errorMessage && (
           <div style={styles.errorAlertCard}>
             <AlertCircle size={14} style={{ marginRight: 6 }} />
@@ -393,7 +395,7 @@ const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
+    position: "relative",
     top: 0,
     bottom: 0,
     left: 0,
@@ -430,14 +432,16 @@ const styles = {
     margin: 0,
   },
   refreshButton: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #cbd5e1",
-    color: "#334155",
-    fontWeight: "700",
-    padding: "6px 12px",
+    backgroundColor: "#0f172a",
+    color: "#ffffff",
+    height: "34px",
+    width: "34px",
     borderRadius: "6px",
+    border: "none",
     cursor: "pointer",
-    fontSize: "11px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
   tabBarWrapper: { display: "flex", gap: "20px" },

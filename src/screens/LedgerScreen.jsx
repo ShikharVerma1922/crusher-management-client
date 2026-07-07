@@ -30,6 +30,7 @@ export default function LedgerScreen() {
   const [limit] = useState(15);
 
   const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
 
   const [editingTicketId, setEditingTicketId] = useState(null);
   const [editingAmount, setEditingAmount] = useState("");
@@ -48,6 +49,14 @@ export default function LedgerScreen() {
   const [dateRangePreset, setDateRangePreset] = useState("this_month"); // 🌟 Default standard fallback configuration
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchQuery(searchQuery);
+    }, 400); // delay in the search after typing
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // ⚙️ 2. MATHEMATICAL TIME INTERVAL COMPUTATION ENGINE
 
@@ -145,7 +154,9 @@ export default function LedgerScreen() {
         const queryParams = new URLSearchParams({
           page: pageTarget,
           limit: limit,
-          ...(searchQuery.trim() && { search: searchQuery.trim() }),
+          ...(debouncedSearchQuery.trim() && {
+            search: debouncedSearchQuery.trim(),
+          }),
           startDate: absoluteStartDate,
           endDate: absoluteEndDate,
         });
@@ -182,13 +193,13 @@ export default function LedgerScreen() {
         setLoading(false);
       }
     },
-    [adminApi, searchQuery, startDate, endDate, limit, currentPage],
+    [adminApi, debouncedSearchQuery, startDate, endDate, limit, currentPage],
   );
 
   // Network listener reacts automatically to any changes in standard parameter values
   useEffect(() => {
     fetchLedgerData(1);
-  }, [searchQuery, startDate, endDate]);
+  }, [debouncedSearchQuery, startDate, endDate]);
 
   async function handleEditCreditAmount(ticketId, quantity) {
     try {
@@ -218,7 +229,7 @@ export default function LedgerScreen() {
   return (
     <div className="ledger-screen" style={styles.viewViewportContainer}>
       <div className="ledger-static-header" style={styles.staticHeaderBlock}>
-        <div className="ledger-action-header" style={styles.actionHeader}>
+        {/* <div className="ledger-action-header" style={styles.actionHeader}>
           <div
             style={{
               display: "flex",
@@ -239,7 +250,7 @@ export default function LedgerScreen() {
           >
             <Download size={16} style={{ marginRight: 6 }} /> Export to Excel
           </button>
-        </div>
+        </div> */}
 
         {/* 📊 PROFESSIONAL UNIFIED CONTROL RIBBON LAYOUT */}
         <div className="ledger-filter-panel" style={styles.filterControlPanel}>
@@ -266,6 +277,16 @@ export default function LedgerScreen() {
             setEndDate={setEndDate}
             onFetchData={() => fetchLedgerData(currentPage)}
           />
+
+          <button
+            className="ledger-export-button"
+            onClick={() =>
+              exportToExcelFormat(tickets, startDate, endDate, searchQuery)
+            }
+            style={styles.exportButton}
+          >
+            <Download size={16} />
+          </button>
         </div>
 
         {errorMessage && (
@@ -511,8 +532,9 @@ const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
-    top: "0px",
+    position: "relative",
+    height: "100%",
+    top: 0,
     bottom: 0,
     left: 0,
     right: 0,
@@ -521,7 +543,7 @@ const styles = {
     fontFamily: "system-ui, sans-serif",
   },
   staticHeaderBlock: {
-    padding: "10px 24px 0px 24px",
+    padding: "10px 24px 16px 24px",
     flexShrink: 0,
     width: "100%",
     boxSizing: "border-box",
@@ -543,18 +565,6 @@ const styles = {
     color: "#64748b",
     marginTop: "2px",
     margin: 0,
-  },
-  exportButton: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#16a34a",
-    color: "#ffffff",
-    fontWeight: "700",
-    padding: "8px 14px",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    fontSize: "12px",
   },
   filterControlPanel: {
     display: "flex",
@@ -585,6 +595,18 @@ const styles = {
     padding: "6px 0",
     fontSize: "13px",
     color: "#334155",
+  },
+  exportButton: {
+    backgroundColor: "#26a356",
+    color: "#ffffff",
+    height: "32px",
+    width: "32px",
+    borderRadius: "6px",
+    border: "none",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
   errorAlertCard: {
     display: "flex",

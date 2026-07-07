@@ -398,13 +398,13 @@ const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
+    position: "relative",
     top: 0,
     bottom: 0,
     left: 0,
     right: 0,
     backgroundColor: "#f8fafc",
-    overflow: "hidden", // 🌟 CRITICAL 1: Disables the horizontal/vertical master page overflow layout bars completely
+    overflow: "hidden",
     width: "100%",
     boxSizing: "border-box",
   },

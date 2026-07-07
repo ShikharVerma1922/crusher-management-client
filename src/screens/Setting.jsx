@@ -74,10 +74,10 @@ export default function Setting() {
             <h4 style={{ margin: 0, color: "#475569" }}>No Settings Found</h4>
           </div>
         ) : (
-          <div style={styles.tableCardFrame}>
+          <>
             {activeTab === "Material" && <MaterialTable />}
             {activeTab === "Clerk" && <ClerkTable />}
-          </div>
+          </>
         )}
       </div>
     </div>
@@ -88,7 +88,7 @@ const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
+    position: "relative",
     top: 0,
     bottom: 0,
     left: 0,
@@ -191,11 +191,10 @@ const styles = {
     boxSizing: "border-box",
   },
   tableCardFrame: {
-    // backgroundColor: "#ffffff",
-    // border: "1px solid #e2e8f0",
-    // borderRadius: "8px",
-    // overflow: "hidden",
-    // margintop: "60px",
-    // boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
+    backgroundColor: "#ffffff",
+    overflow: "hidden",
+    width: "100%",
+    maxWidth: "100%",
+    boxSizing: "border-box",
   },
 };

@@ -483,7 +483,7 @@ const styles = {
     // right: 0,
     backgroundColor: "#f8fafc",
     // overflow: "hidden",
-    width: "fit-content",
+    width: "100%",
     // boxSizing: "border-box",
   },
   staticHeaderBlock: {

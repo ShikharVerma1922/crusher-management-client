@@ -31,7 +31,7 @@ export default function LoginScreen() {
     <div style={styles.viewWrapper}>
       <div style={styles.loginCard}>
         <div style={styles.cardHeader}>
-          <div style={styles.badgeElement}>M</div>
+          <img width="50" height="50" src="src/assets/mandar_logo_2.png" />
           <h2 style={styles.mainTitle}>Mandar Crusher</h2>
           <p style={styles.subTitle}>Administrative Control Access Gateway</p>
         </div>
@@ -99,102 +99,140 @@ export default function LoginScreen() {
 
 const styles = {
   viewWrapper: {
+    minHeight: "100vh",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    minHeight: "100vh",
-    backgroundColor: "#0f172a",
+    background: "#111827",
+    padding: "32px",
+    fontFamily: "Inter, sans-serif",
   },
+
   loginCard: {
-    backgroundColor: "#ffffff",
-    padding: "40px",
-    borderRadius: "16px",
     width: "100%",
-    maxWidth: "420px",
-    boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.3)",
+    maxWidth: "380px",
+    background: "#d1cfcf",
+    borderRadius: "12px",
+    padding: "36px 32px",
+    border: "1px solid #e5e7eb",
+    boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
   },
-  cardHeader: { textAlign: "center", marginBottom: "32px" },
+
+  cardHeader: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    marginBottom: "36px",
+  },
+
   badgeElement: {
-    backgroundColor: "#16a34a",
-    color: "#ffffff",
-    fontSize: "24px",
-    fontWeight: "900",
-    width: "48px",
-    height: "48px",
-    display: "inline-flex",
+    width: "56px",
+    height: "56px",
+    borderRadius: "12px",
+    background: "#1f2937",
+    color: "#fff",
+    display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: "10px",
-    marginBottom: "16px",
+    fontSize: "24px",
+    fontWeight: "700",
+    marginBottom: "18px",
   },
+
   mainTitle: {
-    fontSize: "22px",
-    fontWeight: "800",
-    color: "#0f172a",
     margin: 0,
+    fontSize: "26px",
+    fontWeight: "700",
+    color: "#111827",
+    letterSpacing: "-0.5px",
   },
+
   subTitle: {
+    marginTop: "8px",
     fontSize: "13px",
-    color: "#64748b",
-    marginTop: "6px",
-    margin: 0,
-    fontWeight: "500",
+    color: "#6b7280",
+    textAlign: "center",
+    lineHeight: 1.5,
+    maxWidth: "240px",
   },
+
   errorBanner: {
     display: "flex",
-    alignItems: "center",
-    backgroundColor: "#fef2f2",
-    border: "1px solid #fee2e2",
-    color: "#991b1b",
+    alignItems: "flex-start",
+    gap: "10px",
     padding: "12px 14px",
-    borderRadius: "8px",
-    marginBottom: "20px",
+    marginBottom: "24px",
+    background: "#fff7ed",
+    borderLeft: "4px solid #ea580c",
+    color: "#9a3412",
     fontSize: "13px",
-    fontWeight: "500",
+    borderRadius: "6px",
   },
-  formContainer: { display: "flex", flexDirection: "column", gap: "20px" },
-  inputLabelFieldPair: { display: "flex", flexDirection: "column", gap: "6px" },
+
+  formContainer: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "22px",
+  },
+
+  inputLabelFieldPair: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "8px",
+  },
+
   inputLabelText: {
-    fontSize: "12px",
-    fontWeight: "600",
-    color: "#475569",
+    fontSize: "11px",
+    fontWeight: "700",
+    color: "#6b7280",
+    letterSpacing: "1px",
     textTransform: "uppercase",
-    letterSpacing: "0.5px",
   },
+
   inputIconWrapper: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #cbd5e1",
-    borderRadius: "8px",
-    padding: "0 12px",
-    transition: "border-color 0.15s",
+    background: "#f9fafb",
+    borderBottom: "2px solid #d1d5db",
+    padding: "0 4px",
+    transition: "all .2s ease",
   },
-  inputIcon: { color: "#94a3b8", marginRight: "10px" },
+
+  inputIcon: {
+    color: "#6b7280",
+    marginRight: "12px",
+  },
+
   textInputField: {
-    backgroundColor: "transparent",
+    width: "100%",
     border: "none",
     outline: "none",
-    width: "100%",
-    padding: "12px 0",
-    fontSize: "14px",
-    color: "#1e293b",
+    background: "transparent",
+    padding: "14px 0",
+    fontSize: "15px",
+    color: "#111827",
+    fontWeight: "500",
   },
+
   actionSubmitBtn: {
+    marginTop: "8px",
+    width: "100%",
+    height: "48px",
+    border: "none",
+    borderRadius: "8px",
+    background: "#111827",
+    color: "#ffffff",
+    fontSize: "14px",
+    fontWeight: "600",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     gap: "8px",
-    backgroundColor: "#2563eb",
-    color: "#ffffff",
-    fontWeight: "700",
-    fontSize: "14px",
-    padding: "14px",
-    borderRadius: "8px",
-    border: "none",
     cursor: "pointer",
-    boxShadow: "0 4px 6px -1px rgba(37, 99, 235, 0.2)",
-    transition: "background-color 0.15s",
+    transition: "0.2s ease",
   },
-  spinner: { animation: "spin 1s linear infinite" },
+
+  spinner: {
+    animation: "spin 1s linear infinite",
+  },
 };

@@ -1,5 +1,6 @@
 import React from "react";
-import { SlidersHorizontal, RefreshCw } from "lucide-react";
+import { SlidersHorizontal, RefreshCw, Download } from "lucide-react";
+import { exportToExcelFormat } from "../utils/excel";
 
 /**
  * High Density Date Filter Control Bar Component

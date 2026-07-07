@@ -134,14 +134,14 @@ export default function App() {
 
         <div style={styles.headerRightProfileGroup}>
           {/* Live Shift Clock Display */}
-          <div style={styles.utilityBadge}>
+          {/* <div style={styles.utilityBadge}>
             <span style={styles.utilityText}>
               Shift Time:{" "}
               <strong style={{ color: "#f8fafc", fontFamily: "monospace" }}>
                 {liveTime}
               </strong>
             </span>
-          </div>
+          </div> */}
 
           {/* 👑 Relocated User Credentials & Logout Button Trigger */}
           <div style={styles.navbarUserCard}>
@@ -330,7 +330,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     height: "100vh",
-    width: "100vw",
+    width: "100%",
     overflow: "hidden",
     boxSizing: "border-box",
     backgroundColor: "#f8fafc",
@@ -518,12 +518,8 @@ const styles = {
 
   mainViewportContainer: {
     flex: 1,
-    position: "relative",
-    marginLeft: "4%",
+    marginLeft: "60px",
     height: "calc(100vh - 56px)",
-    overflow: "hidden",
-    boxSizing: "border-box",
-    paddingLeft: "60px",
-    width: "96%",
+    overflow: "auto",
   },
 };

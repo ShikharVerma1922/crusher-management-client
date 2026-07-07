@@ -476,7 +476,7 @@ const styles = {
   viewViewportContainer: {
     display: "flex",
     flexDirection: "column",
-    position: "absolute",
+    position: "relative",
     top: 0,
     bottom: 0,
     left: 0,
