@@ -370,7 +370,7 @@ export default function LedgerScreen() {
                         {ticket.vehicleNumber.toUpperCase()}
                       </td>
                       <td style={{ ...styles.tdElement, color: "#64748b" }}>
-                        {ticket.site.toLocaleString()}
+                        {ticket.site?.toLocaleString() || ""}
                       </td>
                       <td
                         style={{
