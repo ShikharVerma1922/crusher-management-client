@@ -74,10 +74,10 @@ export default function Setting() {
             <h4 style={{ margin: 0, color: "#475569" }}>No Settings Found</h4>
           </div>
         ) : (
-          <>
+          <div style={styles.tableCardFrame}>
             {activeTab === "Material" && <MaterialTable />}
             {activeTab === "Clerk" && <ClerkTable />}
-          </>
+          </div>
         )}
       </div>
     </div>

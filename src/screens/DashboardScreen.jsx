@@ -399,12 +399,11 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     position: "relative",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
+    height: "100vh",
+    minHeight: "100vh",
+    overflowY: "auto",
+    overflowX: "hidden",
     backgroundColor: "#f8fafc",
-    overflow: "hidden",
     width: "100%",
     boxSizing: "border-box",
   },
@@ -415,6 +414,8 @@ const styles = {
     boxSizing: "border-box",
     backgroundColor: "#f8fafc",
     zIndex: 20,
+    position: "sticky",
+    top: 0,
   },
   actionHeader: {
     display: "flex",
@@ -511,9 +512,12 @@ const styles = {
   // Isolate Scroller Sheet Configurations
   dynamicScrollBodyWrapper: {
     flex: 1,
+    minHeight: 0,
     padding: "0px 24px 24px 24px",
     overflowY: "auto", // 🌟 CRITICAL 2: Scrolling constraints are applied EXCLUSIVELY to data components below the navigation headers
     overflowX: "hidden", // Slaughters horizontal layout visual breaks completely
+    scrollbarWidth: "none",
+    msOverflowStyle: "none",
     boxSizing: "border-box",
     width: "100%",
   },

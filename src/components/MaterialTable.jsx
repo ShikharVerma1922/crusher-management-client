@@ -467,6 +467,7 @@ const styles = {
   stickyTableHeader: { backgroundColor: "#0f172a" },
   thElement: {
     padding: "12px 16px",
+    boxSizing: "border-box",
     color: "#94a3b8",
     fontWeight: "600",
     textTransform: "uppercase",
@@ -482,6 +483,7 @@ const styles = {
   },
   tdElement: {
     padding: "14px 16px",
+    boxSizing: "border-box",
     color: "#334155",
     verticalAlign: "middle",
     whiteSpace: "normal",
