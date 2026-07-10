@@ -25,10 +25,10 @@ export const exportToExcelFormat = (
   worksheet["!cols"] = [
     { wch: 8 }, //receipt
     { wch: 22 }, //date
-    { wch: 15 }, //name
+    { wch: 20 }, //name
     { wch: 14 }, //vehicle
-    { wch: 15 }, //site
-    { wch: 12 }, //material
+    { wch: 20 }, //site
+    { wch: 10 }, //material
     { wch: 10 }, //quantity
     { wch: 10 }, //rate
     { wch: 10 }, //payment

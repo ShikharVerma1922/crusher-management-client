@@ -322,7 +322,7 @@ export default function DashboardScreen() {
                       </th>
                       <th style={styles.tableThCellLabel}>Truck Dispatches</th>
                       <th style={styles.tableThCellLabel}>
-                        Net Volumetric Weight (MT)
+                        Net Volumetric Qyantity
                       </th>
                       <th style={styles.tableThCellLabel}>
                         Commercial Revenue Realized

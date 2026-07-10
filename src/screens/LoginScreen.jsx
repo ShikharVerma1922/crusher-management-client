@@ -31,7 +31,7 @@ export default function LoginScreen() {
     <div style={styles.viewWrapper}>
       <div style={styles.loginCard}>
         <div style={styles.cardHeader}>
-          <img width="50" height="50" src="src/assets/mandar_logo_2.png" />
+          <img width="50" height="50" src="/logo.png" />
           <h2 style={styles.mainTitle}>Mandar Crusher</h2>
           <p style={styles.subTitle}>Administrative Control Access Gateway</p>
         </div>

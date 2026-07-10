@@ -35,6 +35,8 @@ export default function LedgerScreen() {
   const [editingTicketId, setEditingTicketId] = useState(null);
   const [editingAmount, setEditingAmount] = useState("");
 
+  const [exporting, setExporting] = useState(false);
+
   // 🗓️ 1. TIME-SERIES BOUNDARY INITIALIZATION CONTEXT
   // Returns a raw "YYYY-MM-DD" string mapping to local calendar states cleanly
   const formatLocalCalendarDate = (dateObj) => {
@@ -226,6 +228,33 @@ export default function LedgerScreen() {
     }
   }
 
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+
+      const start = new Date(startDate);
+      start.setHours(9, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1);
+      end.setHours(8, 59, 59, 999);
+
+      const response = await adminApi.get("/transactions/export", {
+        params: {
+          search: searchQuery.trim(),
+          startDate: start.toISOString(),
+          endDate: end.toISOString(),
+        },
+      });
+
+      exportToExcelFormat(response.data.data, startDate, endDate, searchQuery);
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="ledger-screen" style={styles.viewViewportContainer}>
       <div className="ledger-static-header" style={styles.staticHeaderBlock}>
@@ -279,13 +308,23 @@ export default function LedgerScreen() {
           />
 
           <button
-            className="ledger-export-button"
-            onClick={() =>
-              exportToExcelFormat(tickets, startDate, endDate, searchQuery)
-            }
-            style={styles.exportButton}
+            onClick={handleExport}
+            disabled={exporting}
+            style={{
+              ...styles.exportButton,
+              ...(exporting && styles.exportButtonDisabled),
+            }}
           >
-            <Download size={16} />
+            {exporting ? (
+              <RefreshCw
+                size={16}
+                style={{
+                  animation: "spin 1s linear infinite",
+                }}
+              />
+            ) : (
+              <Download size={16} />
+            )}
           </button>
         </div>
 
@@ -736,5 +775,9 @@ const styles = {
     justifyContent: "center",
     minHeight: "200px",
     width: "100%",
+  },
+  exportButtonDisabled: {
+    opacity: 0.7,
+    cursor: "not-allowed",
   },
 };
