@@ -48,12 +48,11 @@ export default function LoginScreen() {
 
         <form onSubmit={handleFormSubmit} style={styles.formContainer}>
           <div style={styles.inputLabelFieldPair}>
-            <label style={styles.inputLabelText}>Username</label>
             <div style={styles.inputIconWrapper}>
               <User size={18} style={styles.inputIcon} />
               <input
                 type="text"
-                placeholder="e.g. admin_owner"
+                placeholder="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 style={styles.textInputField}
@@ -63,12 +62,11 @@ export default function LoginScreen() {
           </div>
 
           <div style={styles.inputLabelFieldPair}>
-            <label style={styles.inputLabelText}>Password</label>
             <div style={styles.inputIconWrapper}>
               <Lock size={18} style={styles.inputIcon} />
               <input
                 type="password"
-                placeholder="••••••••••••"
+                placeholder="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 style={styles.textInputField}
@@ -88,7 +86,7 @@ export default function LoginScreen() {
                 Session Vault...
               </>
             ) : (
-              "Unlock Administrative Ledger"
+              "Login"
             )}
           </button>
         </form>
@@ -122,7 +120,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    marginBottom: "36px",
+    marginBottom: "16px",
   },
 
   badgeElement: {

@@ -232,7 +232,7 @@ export default function AnalyticsExplorerScreen() {
               <span style={styles.metaLabelText}>Peak Output Single Spike</span>
               <span style={{ ...styles.metaValueText, color: "#2563eb" }}>
                 {Math.max(
-                  ...chartData.map((d) => Number(d.quantity ?? 0)),
+                  ...chartData.map((d) => Number(d.materialQuantity ?? 0)),
                   0,
                 ).toLocaleString()}{" "}
                 ft<sup>3</sup>

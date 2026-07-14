@@ -119,9 +119,8 @@ export default function App() {
       {/* 🏛️ 1. MASTER TOP NAVBAR (With Integrated User Context Controls) */}
       <header style={styles.permanentHeaderRibbon}>
         <div style={styles.headerLeftBrandGroup}>
-          <div style={styles.brandIconBox}>
-            <Building2 size={18} color="#38bdf8" />
-          </div>
+          <img width="28" height="28" src="../src/assets/logo.png" />
+
           <div style={styles.brandText}>
             <h1 style={styles.brandTitle}>Mandar Crusher</h1>
             <span style={styles.brandSubtitle}>

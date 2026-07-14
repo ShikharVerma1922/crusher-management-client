@@ -11,6 +11,7 @@ import {
   Pencil,
   RefreshCw,
 } from "lucide-react";
+import { ledgerStyles } from "../styles/ledgerStyles.js";
 
 export default function VoidRequestsScreen() {
   const { adminApi } = useContext(AdminContext);
@@ -93,9 +94,9 @@ export default function VoidRequestsScreen() {
   };
 
   return (
-    <div style={styles.viewViewportContainer}>
+    <div style={ledgerStyles.viewViewportContainer}>
       {/* HEADER STRIP */}
-      <div style={styles.staticHeaderBlock}>
+      <div style={ledgerStyles.staticHeaderBlock}>
         {/* <div style={styles.actionHeader}>
           <div>
             <h1 style={styles.pageTitle}>VOID REQUESTS</h1>
@@ -103,7 +104,13 @@ export default function VoidRequestsScreen() {
         </div> */}
 
         {/* CONTROLS STRIP */}
-        <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            paddingRight: "10px",
+          }}
+        >
           <div style={styles.tabBarWrapper}>
             <button
               onClick={() => setActiveTab("PENDING")}
@@ -149,7 +156,7 @@ export default function VoidRequestsScreen() {
           </button>
         </div>
         {errorMessage && (
-          <div style={styles.errorAlertCard}>
+          <div style={ledgerStyles.errorAlertCard}>
             <AlertCircle size={14} style={{ marginRight: 6 }} />
             <span>{errorMessage}</span>
           </div>
@@ -157,7 +164,7 @@ export default function VoidRequestsScreen() {
       </div>
 
       {/* COMPACT TABLE RENDER AREA */}
-      <div style={styles.dynamicTableBodyWrapper}>
+      <div style={ledgerStyles.dynamicScrollBodyWrapper}>
         {loading ? (
           <div style={styles.centeredStateBox}>
             <Loader2
@@ -174,39 +181,51 @@ export default function VoidRequestsScreen() {
             <h4 style={{ margin: 0, color: "#475569" }}>No Logs Found</h4>
           </div>
         ) : (
-          <div style={styles.tableCardFrame}>
+          <div style={ledgerStyles.tableCardContainer}>
             <table style={styles.compactTable}>
               <thead>
                 <tr style={styles.thRow}>
-                  <th width="80" style={styles.tableHeaderCell}>
-                    Receipt
+                  <th width="50" style={ledgerStyles.thElement}>
+                    R.No.
                   </th>
-                  <th width="90" style={styles.tableHeaderCell}>
+                  <th width="60" style={ledgerStyles.thElement}>
                     Date
                   </th>
-                  <th width="120" style={styles.tableHeaderCell}>
+                  <th width="100" style={ledgerStyles.thElement}>
                     Customer
                   </th>
-                  <th width="90" style={styles.tableHeaderCell}>
-                    Vehicle
+                  <th width="60" style={ledgerStyles.thElement}>
+                    V.No.
                   </th>
-                  <th width="140" style={styles.tableHeaderCell}>
-                    Material
+                  <th width="35" style={ledgerStyles.thElement}>
+                    Mat
                   </th>
-                  <th width="90" style={styles.tableHeaderCell}>
-                    Quantity
+                  <th width="30" style={ledgerStyles.thElement}>
+                    M.QTY
                   </th>
-                  <th width="70" style={styles.tableHeaderCell}>
-                    Amount
+                  <th width="40" style={ledgerStyles.thElement}>
+                    M.Rate
+                  </th>
+                  <th width="50" style={ledgerStyles.thElement}>
+                    M.Amt
+                  </th>
+                  <th width="50" style={ledgerStyles.thElement}>
+                    R.Amt
+                  </th>
+                  <th width="60" style={ledgerStyles.thElement}>
+                    G.Total
+                  </th>
+                  <th width="40" style={ledgerStyles.thElement}>
+                    A.Paid
                   </th>
 
                   {/* The text explanation rows inherit the remaining structural space fluidly */}
-                  <th style={{ ...styles.tableHeaderCell, minWidth: "100px" }}>
+                  <th style={{ ...ledgerStyles.thElement, minWidth: "100px" }}>
                     Operator Reason Notes
                   </th>
                   <th
                     style={{
-                      ...styles.tableHeaderCell,
+                      ...ledgerStyles.thElement,
                       textAlign: "right",
                       minWidth: "250px",
                     }}
@@ -217,25 +236,25 @@ export default function VoidRequestsScreen() {
               </thead>
               <tbody>
                 {requests.map((req) => (
-                  <tr key={req.id} style={styles.tbRow}>
-                    <td style={styles.tableBodyCell}>
+                  <tr key={req.id} style={ledgerStyles.tableBodyRowElement}>
+                    <td style={ledgerStyles.tdElement}>
                       #{req.transaction?.receiptNumber}
                     </td>
                     <td
                       style={{
-                        ...styles.tableBodyCell,
+                        ...ledgerStyles.tdElement,
                         whiteSpace: "nowrap",
                       }}
                     >
                       {new Date(req.createdAt).toLocaleDateString("en-IN")}
                     </td>
-                    <td style={styles.tableBodyCell}>
-                      <strong>{req.transaction?.customerName}</strong>
+                    <td style={ledgerStyles.tdElement}>
+                      <strong>{req.transaction?.customer.name}</strong>
                     </td>
 
                     <td
                       style={{
-                        ...styles.tableBodyCell,
+                        ...ledgerStyles.tdElement,
                         fontFamily: "monospace",
                         fontWeight: "bold",
                         whiteSpace: "nowrap",
@@ -246,36 +265,40 @@ export default function VoidRequestsScreen() {
                     >
                       {req.transaction?.vehicleNumber}
                     </td>
-                    <td style={styles.tableBodyCell}>
+                    <td style={ledgerStyles.tdElement}>
                       <span style={styles.materialMiniTag}>
                         {req.transaction?.material?.name}
                       </span>
                     </td>
                     <td
                       style={{
-                        ...styles.tableBodyCell,
+                        ...ledgerStyles.tdElement,
                         whiteSpace: "nowrap",
                         maxWidth: "90px",
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                       }}
                     >
-                      {req.transaction?.quantity?.toLocaleString()}
+                      {req.transaction?.materialQuantity?.toLocaleString()}
+                    </td>
+                    <td style={ledgerStyles.tdElement}>
+                      {req.transaction?.materialRate?.toLocaleString("en-IN")}
+                    </td>
+                    <td style={ledgerStyles.tdElement}>
+                      {req.transaction?.materialAmount?.toLocaleString("en-IN")}
+                    </td>
+                    <td style={ledgerStyles.tdElement}>
+                      {req.transaction?.royaltyAmount?.toLocaleString("en-IN")}
+                    </td>
+                    <td style={ledgerStyles.tdElement}>
+                      {req.transaction?.grandTotal?.toLocaleString("en-IN")}
+                    </td>
+                    <td style={ledgerStyles.tdElement}>
+                      {req.transaction?.amountPaid?.toLocaleString("en-IN")}
                     </td>
                     <td
                       style={{
-                        ...styles.tableBodyCell,
-                        whiteSpace: "nowrap",
-                        maxWidth: "90px",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      ₹{req.transaction?.totalAmount?.toLocaleString("en-IN")}
-                    </td>
-                    <td
-                      style={{
-                        ...styles.tableBodyCell,
+                        ...ledgerStyles.tdElement,
                         fontStyle: "italic",
                         color: "#64748b",
                         maxWidth: "185px",
@@ -289,7 +312,9 @@ export default function VoidRequestsScreen() {
                     </td>
 
                     {/* INLINE ACTION ROUTER CELL */}
-                    <td style={{ ...styles.tableBodyCell, textAlign: "right" }}>
+                    <td
+                      style={{ ...ledgerStyles.tdElement, textAlign: "right" }}
+                    >
                       {activeTab === "PENDING" ? (
                         <div style={styles.inlineActionForm}>
                           <div style={styles.inlineButtonRow}>
@@ -392,33 +417,6 @@ export default function VoidRequestsScreen() {
 
 // 🎨 HIGH-DENSITY COMPACT SHEET DESIGN MATRIX
 const styles = {
-  viewViewportContainer: {
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#f8fafc",
-    overflow: "hidden",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
-    flexShrink: 0,
-    width: "100%",
-    boxSizing: "border-box",
-    borderBottom: "1px solid #e2e8f0",
-    backgroundColor: "#ffffff",
-  },
-  actionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "12px",
-  },
   pageTitle: {
     fontSize: "20px",
     fontWeight: "800",
@@ -444,7 +442,11 @@ const styles = {
     justifyContent: "center",
   },
 
-  tabBarWrapper: { display: "flex", gap: "20px" },
+  tabBarWrapper: {
+    display: "flex",
+    gap: "20px",
+    paddingLeft: "10px",
+  },
   tabButton: {
     background: "none",
     border: "none",
@@ -477,47 +479,13 @@ const styles = {
     fontSize: "11px",
   },
 
-  dynamicTableBodyWrapper: {
-    flex: 1,
-    padding: "16px 24px",
-    overflowY: "auto",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  tableCardFrame: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-    overflow: "hidden",
-    boxShadow: "0 1px 2px rgba(0,0,0,0.02)",
-  },
   compactTable: {
     width: "100%",
     borderCollapse: "collapse",
     textAlign: "left",
     fontSize: "12px",
   },
-  thRow: { backgroundColor: "#f8fafc", borderBottom: "1px solid #e2e8f0" },
-  tableHeaderCell: {
-    padding: "10px 12px",
-    fontWeight: "700",
-    color: "#475569",
-    fontSize: "11px",
-    textTransform: "uppercase",
-    letterSpacing: "0.3px",
-  },
-  tbRow: {
-    borderBottom: "1px solid #f1f5f9",
-    transition: "background-color 0.1s",
-  },
-  tableBodyCell: {
-    padding: "10px 12px",
-    color: "#334155",
-    verticalAlign: "top",
-    fontSize: "12px",
-    lineHeight: "1.5",
-    wordBreak: "break-word",
-  },
+
   materialMiniTag: {
     fontSize: "10px",
     fontWeight: "700",
@@ -527,7 +495,6 @@ const styles = {
     borderRadius: "4px",
   },
 
-  // Inline actions grid
   inlineActionForm: {
     display: "flex",
     flexDirection: "column",

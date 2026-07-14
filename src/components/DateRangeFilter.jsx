@@ -102,68 +102,74 @@ export default function DateRangeFilter({
   );
 }
 
-// 🎨 COMPACT FILTER SYSTEM OBJECT DESIGN MODULE
 const styles = {
-  datePickerWrapper: { display: "flex", alignItems: "center", gap: "8px" },
+  datePickerWrapper: {
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+  },
   dropdownInputGroup: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#f1f5f9",
+    backgroundColor: "#ffffff", // Pure white background for clear input contrast
     border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
+    borderRadius: "0px", // Sharp industrial edges
+    padding: "0 6px",
+    height: "28px", // Reduced frame height matching your header inputs
   },
   selectDropdownElement: {
     border: "none",
     backgroundColor: "transparent",
     outline: "none",
-    fontSize: "13px",
+    fontSize: "12px", // Tightened text scale
     fontWeight: "600",
-    color: "#334155",
+    color: "#1e293b", // High-contrast navy text
     cursor: "pointer",
-    padding: "4px 0",
+    padding: "2px 0",
+    fontFamily: "inherit", // Inherits the JetBrains/monospace family configuration
   },
   dateInputGroup: {
     display: "flex",
     alignItems: "center",
     backgroundColor: "#ffffff",
     border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
-    transition: "all 0.15s",
+    borderRadius: "0px", // Flat system UI geometry
+    padding: "0 6px",
+    height: "28px",
   },
   dateInputGroupReadOnly: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
+    backgroundColor: "#e2e8f0", // Strict mechanical disable grey
+    border: "1px solid #cbd5e1",
+    borderRadius: "0px",
+    padding: "0 6px",
+    height: "28px",
     opacity: 0.8,
   },
   dateField: {
     border: "none",
     backgroundColor: "transparent",
     outline: "none",
-    padding: "4px 0",
-    color: "#334155",
-    fontSize: "13px",
+    padding: "2px 0",
+    color: "#1e293b",
+    fontSize: "12px",
     fontFamily: "inherit",
+    fontWeight: "600",
   },
-
   refreshButton: {
-    backgroundColor: "#0f172a",
+    backgroundColor: "#475569", // Neutral functional steel grey
     color: "#ffffff",
-    height: "32px",
-    width: "32px",
-    borderRadius: "6px",
-    border: "none",
+    height: "28px",
+    padding: "0 10px", // Text button style instead of single icon square
+    borderRadius: "0px",
+    border: "1px solid #334155",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
+    fontSize: "11px",
+    fontWeight: "700",
+    textTransform: "uppercase",
   },
 };

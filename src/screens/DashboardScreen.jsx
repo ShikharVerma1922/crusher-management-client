@@ -40,50 +40,63 @@ export default function DashboardScreen() {
 
   const calculatePresetBoundaries = useCallback((preset) => {
     const today = new Date();
-    const localMidnightBase = new Date(
-      today.getFullYear(),
-      today.getMonth(),
-      today.getDate(),
-      0,
-      0,
-      0,
-      0,
-    );
+    const shiftStart = new Date(today);
+
+    if (shiftStart.getHours() < 9) {
+      shiftStart.setDate(shiftStart.getDate() - 1);
+    }
+
+    shiftStart.setHours(9, 0, 0, 0);
+
+    let start = new Date(shiftStart);
     const end = new Date();
-    let start = new Date(localMidnightBase.getTime());
 
     switch (preset) {
       case "today":
         break;
-      case "this_week":
-        start.setDate(localMidnightBase.getDate() - localMidnightBase.getDay());
+      case "this_week": {
+        const dayOfWeek = shiftStart.getDay();
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        start.setDate(shiftStart.getDate() - mondayOffset);
         break;
+      }
       case "this_month":
         start = new Date(
-          localMidnightBase.getFullYear(),
-          localMidnightBase.getMonth(),
+          shiftStart.getFullYear(),
+          shiftStart.getMonth(),
           1,
-          0,
+          9,
           0,
           0,
           0,
         );
         break;
       case "this_year":
-        start = new Date(localMidnightBase.getFullYear(), 0, 1, 0, 0, 0, 0);
+        start = new Date(shiftStart.getFullYear(), 0, 1, 9, 0, 0, 0);
         break;
       case "last_7_days":
-        start.setDate(localMidnightBase.getDate() - 7);
+        start.setDate(shiftStart.getDate() - 7);
         break;
       case "last_30_days":
-        start.setDate(localMidnightBase.getDate() - 30);
+        start.setDate(shiftStart.getDate() - 30);
         break;
+      case "last_3_months":
+        start.setMonth(shiftStart.getMonth() - 3);
+        break;
+      case "last_6_months":
+        start.setMonth(shiftStart.getMonth() - 6);
+        break;
+      case "last_1_year":
+        start.setFullYear(shiftStart.getFullYear() - 1);
+        break;
+      case "custom":
+        return;
       default:
         start = new Date(
-          localMidnightBase.getFullYear(),
-          localMidnightBase.getMonth(),
+          shiftStart.getFullYear(),
+          shiftStart.getMonth(),
           1,
-          0,
+          9,
           0,
           0,
           0,
@@ -102,8 +115,15 @@ export default function DashboardScreen() {
     setLoading(true);
     setErrorMessage("");
     try {
-      const absoluteStartDate = `${startDate}T00:00:00.000Z`;
-      const absoluteEndDate = `${endDate}T23:59:59.999Z`;
+      const shiftStart = new Date(startDate);
+      shiftStart.setHours(9, 0, 0, 0);
+
+      const shiftEnd = new Date(endDate);
+      shiftEnd.setDate(shiftEnd.getDate() + 1);
+      shiftEnd.setHours(8, 59, 59, 999);
+
+      const absoluteStartDate = shiftStart.toISOString();
+      const absoluteEndDate = shiftEnd.toISOString();
       const queryParams = new URLSearchParams({
         startDate: absoluteStartDate,
         endDate: absoluteEndDate,

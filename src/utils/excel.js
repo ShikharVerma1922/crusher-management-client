@@ -8,16 +8,22 @@ export const exportToExcelFormat = (
 ) => {
   if (tickets.length === 0) return;
   const flatSheetData = tickets.map((t, index) => ({
-    "S No.": t.receiptNumber || index + 1,
+    "R.No.": t.receiptNumber || index + 1,
     "Date & Time": new Date(t.createdAt).toLocaleString("en-IN"),
-    Name: t.customerName,
-    "V No.": t.vehicleNumber.toUpperCase(),
+    Name: t.customer.name,
+    "Vehicle No.": t.vehicleNumber.toUpperCase(),
     Site: t.site,
-    Material: t.material?.name || "undefined",
-    Quantity: t.quantity,
-    Rate: t.rateApplied,
-    Payment: t.paymentType,
-    Balance: t.totalAmount,
+    Mat: t.material?.name || "undefined",
+    "M.Qty": t.materialQuantity,
+    "M.Rate": t.materialRate,
+    "M.Amt": t.materialAmount,
+    "R.Qty": t.royaltyQuantity,
+    "R.Rate": t.royaltyRate,
+    "R.Amt": t.royaltyAmount,
+    "P.Mode": t.paymentMode,
+    "G.Total": t.grandTotal,
+    "A.Paid": t.amountPaid,
+    Balance: t.balance,
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(flatSheetData);
@@ -29,9 +35,15 @@ export const exportToExcelFormat = (
     { wch: 14 }, //vehicle
     { wch: 20 }, //site
     { wch: 10 }, //material
-    { wch: 10 }, //quantity
-    { wch: 10 }, //rate
-    { wch: 10 }, //payment
+    { wch: 10 }, //material qty
+    { wch: 10 }, //material rate
+    { wch: 10 }, //material amt
+    { wch: 10 }, //royalty qty
+    { wch: 10 }, //royalty rate
+    { wch: 10 }, //royalty amt
+    { wch: 10 }, //payment mode
+    { wch: 10 }, //grand total
+    { wch: 10 }, //amount paid
     { wch: 10 }, //balance
   ];
   XLSX.utils.book_append_sheet(workbook, worksheet, "Weighbridge Ledger");

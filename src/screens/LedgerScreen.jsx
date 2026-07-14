@@ -11,8 +11,10 @@ import {
   ShieldCheck,
   AlertCircle,
   SlidersHorizontal,
+  Loader2,
 } from "lucide-react";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
+import { ledgerStyles } from "../styles/ledgerStyles.js";
 
 export default function LedgerScreen() {
   const { adminApi } = useContext(AdminContext);
@@ -36,6 +38,7 @@ export default function LedgerScreen() {
   const [editingAmount, setEditingAmount] = useState("");
 
   const [exporting, setExporting] = useState(false);
+  const [selectedReceiptId, setSelectedReceiptId] = useState(null);
 
   // 🗓️ 1. TIME-SERIES BOUNDARY INITIALIZATION CONTEXT
   // Returns a raw "YYYY-MM-DD" string mapping to local calendar states cleanly
@@ -78,10 +81,12 @@ export default function LedgerScreen() {
     switch (preset) {
       case "today":
         break;
-      case "this_week":
+      case "this_week": {
         const dayOfWeek = shiftStart.getDay();
-        start.setDate(shiftStart.getDate() - dayOfWeek);
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        start.setDate(shiftStart.getDate() - mondayOffset);
         break;
+      }
       case "this_month":
         start = new Date(
           shiftStart.getFullYear(),
@@ -203,13 +208,13 @@ export default function LedgerScreen() {
     fetchLedgerData(1);
   }, [debouncedSearchQuery, startDate, endDate]);
 
-  async function handleEditCreditAmount(ticketId, quantity) {
+  async function handleEditCreditAmount(ticketId, materialQuantity) {
     try {
       const response = await adminApi.patch(
         `/transactions/${ticketId}/credit-amount`,
         {
           amount: Number(editingAmount),
-          quantity,
+          materialQuantity,
         },
       );
       setTickets((prev) =>
@@ -256,9 +261,12 @@ export default function LedgerScreen() {
   };
 
   return (
-    <div className="ledger-screen" style={styles.viewViewportContainer}>
-      <div className="ledger-static-header" style={styles.staticHeaderBlock}>
-        {/* <div className="ledger-action-header" style={styles.actionHeader}>
+    <div className="ledger-screen" style={ledgerStyles.viewViewportContainer}>
+      <div
+        className="ledger-static-header"
+        style={ledgerStyles.staticHeaderBlock}
+      >
+        {/* <div className="ledger-action-header" style={ledgerStyles.actionHeader}>
           <div
             style={{
               display: "flex",
@@ -275,25 +283,28 @@ export default function LedgerScreen() {
             onClick={() =>
               exportToExcelFormat(tickets, startDate, endDate, searchQuery)
             }
-            style={styles.exportButton}
+            style={ledgerStyles.exportButton}
           >
             <Download size={16} style={{ marginRight: 6 }} /> Export to Excel
           </button>
         </div> */}
 
         {/* 📊 PROFESSIONAL UNIFIED CONTROL RIBBON LAYOUT */}
-        <div className="ledger-filter-panel" style={styles.filterControlPanel}>
+        <div
+          className="ledger-filter-panel"
+          style={ledgerStyles.filterControlPanel}
+        >
           <div
             className="ledger-search-container"
-            style={styles.searchContainer}
+            style={ledgerStyles.searchContainer}
           >
-            <Search size={16} style={styles.searchIcon} />
+            <Search size={16} style={ledgerStyles.searchIcon} />
             <input
               type="text"
               placeholder="Search vehicle number, customer name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              style={styles.searchInput}
+              style={ledgerStyles.searchInput}
             />
           </div>
 
@@ -311,8 +322,8 @@ export default function LedgerScreen() {
             onClick={handleExport}
             disabled={exporting}
             style={{
-              ...styles.exportButton,
-              ...(exporting && styles.exportButtonDisabled),
+              ...ledgerStyles.exportButton,
+              ...(exporting && ledgerStyles.exportButtonDisabled),
             }}
           >
             {exporting ? (
@@ -329,7 +340,7 @@ export default function LedgerScreen() {
         </div>
 
         {errorMessage && (
-          <div style={styles.errorAlertCard}>
+          <div style={ledgerStyles.errorAlertCard}>
             <AlertCircle size={18} style={{ marginRight: 8 }} />
             <span>{errorMessage}</span>
           </div>
@@ -338,16 +349,25 @@ export default function LedgerScreen() {
 
       <div
         className="ledger-scroll-body"
-        style={styles.dynamicScrollBodyWrapper}
+        style={ledgerStyles.dynamicScrollBodyWrapper}
       >
-        <div className="ledger-table-card" style={styles.tableCardContainer}>
+        <div
+          className="ledger-table-card"
+          style={ledgerStyles.tableCardContainer}
+        >
           <div
             className="ledger-table-scroller"
-            style={styles.overflowTableScroller}
+            style={ledgerStyles.overflowTableScroller}
           >
             {loading ? (
-              <div style={styles.loadingWrapperGrid}>
-                <div style={styles.spinnerElement}></div>
+              <div style={ledgerStyles.loadingWrapperGrid}>
+                <Loader2
+                  size={24}
+                  style={{
+                    animation: "spin 1s linear infinite",
+                    color: "#2563eb",
+                  }}
+                />
                 <p
                   style={{ marginTop: 12, color: "#64748b", fontSize: "13px" }}
                 >
@@ -355,170 +375,218 @@ export default function LedgerScreen() {
                 </p>
               </div>
             ) : tickets.length === 0 ? (
-              <div style={styles.emptyStateBlock}>
+              <div style={ledgerStyles.emptyStateBlock}>
                 <p style={{ color: "#64748b", fontWeight: "500" }}>
                   No active records match parameters.
                 </p>
               </div>
             ) : (
-              <table className="ledger-table" style={styles.masterTableElement}>
-                <thead style={styles.stickyTableHeader}>
+              <table
+                className="ledger-table"
+                style={ledgerStyles.masterTableElement}
+              >
+                <thead style={ledgerStyles.stickyTableHeader}>
                   <tr>
-                    <th width="60" style={styles.thElement}>
-                      R No.
+                    <th width="30" style={ledgerStyles.thElement}>
+                      R.No.
                     </th>
 
-                    <th width="120" style={styles.thElement}>
+                    <th width="60" style={ledgerStyles.thElement}>
                       Date/Time
                     </th>
-                    <th width="100" style={styles.thElement}>
+                    <th minWidth="100" style={ledgerStyles.thElement}>
                       Customer
                     </th>
-                    <th width="100" style={styles.thElement}>
-                      V No.
+                    <th width="60" style={ledgerStyles.thElement}>
+                      V.No.
                     </th>
-                    <th width="80" style={styles.thElement}>
+                    <th minWidth="80" style={ledgerStyles.thElement}>
                       Site
                     </th>
-                    <th width="80" style={styles.thElement}>
-                      Material
+                    <th width="35" style={ledgerStyles.thElement}>
+                      Mat
                     </th>
 
-                    <th width="50" style={styles.thElement}>
-                      Quantity
+                    <th width="30" style={ledgerStyles.thElement}>
+                      M.Qty
                     </th>
-                    <th width="50" style={styles.thElement}>
-                      Rate
+                    <th width="40" style={ledgerStyles.thElement}>
+                      M.Rate
                     </th>
-                    <th width="50" style={styles.thElement}>
-                      Type
+                    <th width="50" style={ledgerStyles.thElement}>
+                      M.Amt
                     </th>
-                    <th width="70" style={styles.thElement}>
-                      Amount
+                    <th width="30" style={ledgerStyles.thElement}>
+                      R.Qty
+                    </th>
+                    <th width="40" style={ledgerStyles.thElement}>
+                      R.Rate
+                    </th>
+                    <th width="50" style={ledgerStyles.thElement}>
+                      R.Amt
+                    </th>
+                    <th width="40" style={ledgerStyles.thElement}>
+                      P.Mode
+                    </th>
+                    <th width="60" style={ledgerStyles.thElement}>
+                      G.Total
+                    </th>
+                    <th width="40" style={ledgerStyles.thElement}>
+                      A.Paid
+                    </th>
+                    <th width="60" style={ledgerStyles.thElement}>
+                      Balance
                     </th>
                   </tr>
                 </thead>
                 <tbody>
                   {tickets.map((ticket) => (
-                    <tr key={ticket.id} style={styles.tableBodyRowElement}>
+                    <tr
+                      key={ticket.id}
+                      style={{
+                        ...ledgerStyles.tableBodyRowElement,
+                        ...(selectedReceiptId === ticket.id &&
+                          ledgerStyles.selectedTableRow),
+                      }}
+                    >
                       <td
                         style={{
-                          ...styles.tdElement,
+                          ...ledgerStyles.tdElement,
                           fontWeight: "800",
                           color: "#0f172a",
+                          cursor: "pointer",
+                          userSelect: "none",
                         }}
+                        onClick={() =>
+                          setSelectedReceiptId((prev) =>
+                            prev === ticket.id ? null : ticket.id,
+                          )
+                        }
                       >
                         {ticket.receiptNumber}
                       </td>
-                      <td style={{ ...styles.tdElement, color: "#64748b" }}>
-                        {new Date(ticket.createdAt).toLocaleString("en-IN", {
-                          dateStyle: "short",
-                          timeStyle: "short",
-                        })}
-                      </td>
-                      <td style={{ ...styles.tdElement, color: "#4b5563" }}>
-                        {ticket.customerName}
-                      </td>
                       <td
-                        style={{
-                          ...styles.tdElement,
-                          fontWeight: "700",
-                          letterSpacing: "0.5px",
-                          // color: "#2563eb",
-                        }}
+                        style={{ ...ledgerStyles.tdElement, color: "#64748b" }}
                       >
+                        <div
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            lineHeight: 1.2,
+                          }}
+                        >
+                          <span style={{ fontWeight: 600, color: "#334155" }}>
+                            {new Date(ticket.createdAt).toLocaleDateString(
+                              "en-GB",
+                              {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              },
+                            )}
+                          </span>
+                          <span
+                            style={{
+                              fontSize: "11px",
+                              color: "#94a3b8",
+                              marginTop: "2px",
+                            }}
+                          >
+                            {new Date(ticket.createdAt).toLocaleTimeString(
+                              "en-IN",
+                              {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                                hour12: true,
+                              },
+                            )}
+                          </span>
+                        </div>
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.customer.name}
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
                         {ticket.vehicleNumber.toUpperCase()}
                       </td>
-                      <td style={{ ...styles.tdElement, color: "#64748b" }}>
+                      <td style={ledgerStyles.tdElement}>
                         {ticket.site?.toLocaleString() || ""}
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.material?.name || "Standard aggregate"}
+                      </td>
+
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.materialQuantity.toLocaleString()}
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.materialRate}
                       </td>
                       <td
                         style={{
-                          ...styles.tdElement,
-                          fontWeight: "600",
-                          color: "#475569",
+                          ...ledgerStyles.tdElement,
+                          textAlign: "right",
                         }}
                       >
-                        {ticket.material?.name || "Standard aggregate"}
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.materialAmount.toLocaleString("en-IN")}
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.royaltyQuantity.toLocaleString()}
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.materialRate === 0 ? "N/A" : ticket.royaltyRate}
+                      </td>
+                      <td
+                        style={{
+                          ...ledgerStyles.tdElement,
+                          textAlign: "right",
+                        }}
+                      >
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.royaltyAmount.toLocaleString("en-IN")}
+                      </td>
+                      <td style={ledgerStyles.tdElement}>
+                        {ticket.paymentMode.toLocaleString()}
+                      </td>
+                      <td
+                        style={{
+                          ...ledgerStyles.tdElement,
+                          textAlign: "right",
+                        }}
+                      >
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.grandTotal.toLocaleString("en-IN")}
                       </td>
 
                       <td
                         style={{
-                          ...styles.tdElement,
-                          fontWeight: "700",
-                          color: "#334155",
+                          ...ledgerStyles.tdElement,
+                          textAlign: "right",
                         }}
                       >
-                        {ticket.quantity.toLocaleString()}
-                      </td>
-                      <td style={styles.tdElement}>
-                        {ticket.rateApplied
-                          ? ticket.rateApplied.toLocaleString()
-                          : "N/A"}
-                      </td>
-                      <td style={styles.tdElement}>
-                        {ticket.paymentType.toLocaleString()}
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.amountPaid.toLocaleString("en-IN")}
                       </td>
                       <td
                         style={{
-                          ...styles.tdElement,
-                          fontWeight: "800",
-                          color:
-                            ticket.paymentType === "CASH"
-                              ? "#16a34a"
-                              : "#0284c7",
-                          cursor:
-                            ticket.paymentType === "CASH"
-                              ? "default"
-                              : "pointer",
-                        }}
-                        onDoubleClick={() => {
-                          setEditingTicketId(ticket.id);
-                          setEditingAmount(String(ticket.totalAmount));
+                          ...ledgerStyles.tdElement,
+                          color: ticket.balance > 0 ? "#dc2626" : "#16a34a",
+                          fontWeight: 700,
+                          textAlign: "right",
                         }}
                       >
-                        {editingTicketId === ticket.id &&
-                        ticket.paymentType === "CREDIT" ? (
-                          <input
-                            type="number"
-                            value={editingAmount}
-                            autoFocus
-                            onChange={(e) => setEditingAmount(e.target.value)}
-                            onBlur={() => {
-                              handleEditCreditAmount(
-                                ticket.id,
-                                ticket.quantity,
-                              );
-                              setEditingTicketId(null);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                handleEditCreditAmount(
-                                  ticket.id,
-                                  ticket.quantity,
-                                );
-                                setEditingTicketId(null);
-                              }
-                              if (e.key === "Escape") {
-                                setEditingTicketId(null);
-                              }
-                            }}
-                            style={{
-                              width: "60px",
-                              padding: "2px 4px",
-                              border: "1px solid #cbd5e1",
-                              borderRadius: "6px",
-                              backgroundColor: "#f8fafc",
-                              color: "#0f172a",
-                              fontSize: "13px",
-                              fontWeight: "700",
-                              fontFamily: "inherit",
-                              outline: "none",
-                            }}
-                          />
-                        ) : (
-                          <>₹{ticket.totalAmount.toLocaleString()}</>
-                        )}
+                        {ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.balance.toLocaleString("en-IN")}
                       </td>
                     </tr>
                   ))}
@@ -527,22 +595,25 @@ export default function LedgerScreen() {
             )}
           </div>
 
-          <div className="ledger-pagination-row" style={styles.paginationRow}>
-            <span style={styles.paginationText}>
+          <div
+            className="ledger-pagination-row"
+            style={ledgerStyles.paginationRow}
+          >
+            <span style={ledgerStyles.paginationText}>
               Page <strong>{currentPage}</strong> of{" "}
               <strong>{totalPages}</strong>
             </span>
             <div
               className="ledger-pagination-button-pair"
-              style={styles.paginationButtonPair}
+              style={ledgerStyles.paginationButtonPair}
             >
               <button
                 disabled={currentPage === 1 || loading}
                 onClick={() => fetchLedgerData(currentPage - 1)}
                 style={
                   currentPage === 1
-                    ? styles.pagBtnDisabled
-                    : styles.pagBtnActive
+                    ? ledgerStyles.pagBtnDisabled
+                    : ledgerStyles.pagBtnActive
                 }
               >
                 Prev
@@ -552,8 +623,8 @@ export default function LedgerScreen() {
                 onClick={() => fetchLedgerData(currentPage + 1)}
                 style={
                   currentPage === totalPages
-                    ? styles.pagBtnDisabled
-                    : styles.pagBtnActive
+                    ? ledgerStyles.pagBtnDisabled
+                    : ledgerStyles.pagBtnActive
                 }
               >
                 Next
@@ -566,218 +637,256 @@ export default function LedgerScreen() {
   );
 }
 
-// 🎨 UPDATED DESIGN STYLE VECTOR PROPS
-const styles = {
-  viewViewportContainer: {
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
-    height: "100%",
-    top: 0,
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: "#f8fafc",
-    overflow: "hidden",
-    fontFamily: "system-ui, sans-serif",
-  },
-  staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
-    flexShrink: 0,
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  actionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    gap: "16px",
-  },
-  pageTitle: {
-    fontSize: "20px",
-    fontWeight: "800",
-    color: "#0f172a",
-    margin: 0,
-  },
-  pageSubtitle: {
-    fontSize: "12px",
-    color: "#64748b",
-    marginTop: "2px",
-    margin: 0,
-  },
-  filterControlPanel: {
-    display: "flex",
-    gap: "12px",
-    backgroundColor: "#ffffff",
-    marginTop: "10px",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-    alignItems: "center",
-    flexWrap: "nowrap",
-  },
-  searchContainer: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#f1f5f9",
-    borderRadius: "6px",
-    border: "1px solid #cbd5e1",
-    padding: "0 10px",
-    flex: 1,
-  },
-  searchIcon: { color: "#94a3b8", marginRight: "6px" },
-  searchInput: {
-    backgroundColor: "transparent",
-    border: "none",
-    outline: "none",
-    width: "100%",
-    padding: "6px 0",
-    fontSize: "13px",
-    color: "#334155",
-  },
-  exportButton: {
-    backgroundColor: "#26a356",
-    color: "#ffffff",
-    height: "32px",
-    width: "32px",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorAlertCard: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#fef2f2",
-    border: "1px solid #fca5a5",
-    color: "#991b1b",
-    padding: "8px 12px",
-    borderRadius: "6px",
-    marginTop: "8px",
-    fontSize: "12px",
-  },
-  dynamicScrollBodyWrapper: {
-    flex: 1,
-    padding: "16px 24px 24px 24px",
-    overflow: "hidden",
-    display: "flex",
-    flexDirection: "column",
-    boxSizing: "border-box",
-  },
-  tableCardContainer: {
-    backgroundColor: "#ffffff",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-    display: "flex",
-    flexDirection: "column",
-    flex: 1,
-    overflow: "hidden",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  overflowTableScroller: {
-    flex: 1,
-    overflowY: "auto",
-    overflowX: "auto",
-    width: "100%",
-    position: "relative",
-  },
-  masterTableElement: {
-    width: "100%",
-    borderCollapse: "collapse",
-    textAlign: "left",
-    fontSize: "13px",
-  },
-  stickyTableHeader: {
-    position: "sticky",
-    top: 0,
-    backgroundColor: "#0f172a",
-    zIndex: 10,
-  },
-  thElement: {
-    padding: "12px 14px",
-    color: "#94a3b8",
-    fontWeight: "600",
-    textTransform: "uppercase",
-    fontSize: "11px",
-    letterSpacing: "0.5px",
-    backgroundColor: "#0f172a",
-  },
-  tableBodyRowElement: { borderBottom: "1px solid #f1f5f9" },
-  tdElement: { padding: "12px 14px", color: "#475569", whiteSpace: "nowrap" },
-  badgeApproved: {
-    backgroundColor: "#dcfce7",
-    color: "#16a34a",
-    padding: "2px 6px",
-    borderRadius: "4px",
-    fontSize: "11px",
-    fontWeight: "700",
-  },
-  badgeVoid: {
-    backgroundColor: "#fee2e2",
-    color: "#ef4444",
-    padding: "2px 6px",
-    borderRadius: "4px",
-    fontSize: "11px",
-    fontWeight: "700",
-  },
-  paginationRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "10px 16px",
-    backgroundColor: "#f8fafc",
-    borderTop: "1px solid #e2e8f0",
-    flexShrink: 0,
-  },
-  paginationText: { fontSize: "12px", color: "#475569" },
-  paginationButtonPair: { display: "flex", gap: "6px" },
-  pagBtnActive: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #cbd5e1",
-    color: "#334155",
-    padding: "5px 10px",
-    borderRadius: "4px",
-    fontWeight: "600",
-    fontSize: "12px",
-    cursor: "pointer",
-  },
-  pagBtnDisabled: {
-    backgroundColor: "#f1f5f9",
-    border: "1px solid #cbd5e1",
-    color: "#94a3b8",
-    padding: "5px 10px",
-    borderRadius: "4px",
-    fontSize: "12px",
-    cursor: "not-allowed",
-  },
-  loadingWrapperGrid: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "200px",
-    width: "100%",
-  },
-  spinnerElement: {
-    width: "24px",
-    height: "24px",
-    border: "3px solid #e2e8f0",
-    borderTopColor: "#2563eb",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
-  },
-  emptyStateBlock: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: "200px",
-    width: "100%",
-  },
-  exportButtonDisabled: {
-    opacity: 0.7,
-    cursor: "not-allowed",
-  },
-};
+// const ledgerStyles = {
+//   viewViewportContainer: {
+//     display: "flex",
+//     flexDirection: "column",
+//     position: "relative",
+//     height: "100%",
+//     top: 0,
+//     bottom: 0,
+//     left: 0,
+//     right: 0,
+//     backgroundColor: "#f1f5f9", // Crisp light-grey ERP backdrop
+//     overflow: "hidden",
+//     fontFamily: "JetBrains Mono, Fira Code, Monaco, Consolas, monospace",
+//   },
+//   staticHeaderBlock: {
+//     padding: "3px 0px",
+//     flexShrink: 0,
+//     width: "100%",
+//     boxSizing: "border-box",
+//     backgroundColor: "#1e293b",
+//     borderBottom: "2px solid #0f172a",
+//   },
+//   actionHeader: {
+//     display: "flex",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     gap: "12px",
+//     height: "44px",
+//   },
+//   pageTitle: {
+//     fontSize: "13px",
+//     fontWeight: "700",
+//     color: "#38bdf8",
+//     margin: 0,
+//     textTransform: "uppercase",
+//     letterSpacing: "0.5px",
+//   },
+//   pageSubtitle: {
+//     fontSize: "11px",
+//     color: "#94a3b8",
+//     marginTop: "0px",
+//     margin: 0,
+//   },
+//   filterControlPanel: {
+//     display: "flex",
+//     gap: "8px",
+//     backgroundColor: "#ffffff",
+//     marginTop: "0px",
+//     padding: "6px 12px",
+//     borderRadius: "0px",
+//     borderBottom: "1px solid #cbd5e1",
+//     alignItems: "center",
+//     flexWrap: "nowrap",
+//   },
+//   searchContainer: {
+//     display: "flex",
+//     alignItems: "center",
+//     backgroundColor: "#f8fafc",
+//     borderRadius: "0px",
+//     border: "1px solid #cbd5e1",
+//     padding: "0 8px",
+//     flex: 1,
+//     height: "28px",
+//   },
+//   searchIcon: { color: "#64748b", marginRight: "6px" },
+//   searchInput: {
+//     backgroundColor: "transparent",
+//     border: "none",
+//     outline: "none",
+//     width: "100%",
+//     padding: "4px 0",
+//     fontSize: "12px",
+//     color: "#1e293b",
+//     fontFamily: "inherit",
+//     fontWeight: "600",
+//   },
+//   exportButton: {
+//     backgroundColor: "#16a34a",
+//     color: "#ffffff",
+//     height: "28px",
+//     padding: "0 12px",
+//     borderRadius: "0px",
+//     border: "1px solid #15803d",
+//     cursor: "pointer",
+//     display: "flex",
+//     alignItems: "center",
+//     justifyContent: "center",
+//     fontSize: "11px",
+//     fontWeight: "700",
+//     textTransform: "uppercase",
+//   },
+//   errorAlertCard: {
+//     display: "flex",
+//     alignItems: "center",
+//     backgroundColor: "#fef2f2",
+//     borderLeft: "4px solid #dc2626",
+//     borderTop: "1px solid #fee2e2",
+//     borderRight: "1px solid #fee2e2",
+//     borderBottom: "1px solid #fee2e2",
+//     color: "#991b1b",
+//     padding: "6px 12px",
+//     borderRadius: "0px",
+//     marginTop: "4px",
+//     fontSize: "11px",
+//     fontWeight: "600",
+//   },
+//   dynamicScrollBodyWrapper: {
+//     flex: 1,
+//     padding: "8px 12px 12px 12px",
+//     overflow: "hidden",
+//     display: "flex",
+//     flexDirection: "column",
+//     boxSizing: "border-box",
+//   },
+//   tableCardContainer: {
+//     backgroundColor: "#ffffff",
+//     borderRadius: "0px",
+//     border: "1px solid #cbd5e1",
+//     display: "flex",
+//     flexDirection: "column",
+//     flex: 1,
+//     overflow: "hidden",
+//     width: "100%",
+//     boxSizing: "border-box",
+//   },
+//   overflowTableScroller: {
+//     flex: 1,
+//     overflowY: "auto",
+//     overflowX: "auto",
+//     width: "100%",
+//     position: "relative",
+//     backgroundColor: "#ffffff",
+//   },
+//   masterTableElement: {
+//     width: "100%",
+//     borderCollapse: "collapse",
+//     textAlign: "left",
+//     fontSize: "12px",
+//   },
+//   stickyTableHeader: {
+//     position: "sticky",
+//     top: 0,
+//     backgroundColor: "#f8fafc",
+//     zIndex: 10,
+//   },
+//   thElement: {
+//     padding: "8px 10px",
+//     color: "#475569",
+//     fontWeight: "700",
+//     textTransform: "uppercase",
+//     fontSize: "11px",
+//     letterSpacing: "0.2px",
+//     backgroundColor: "#f1f5f9",
+//     borderBottom: "2px solid #cbd5e1",
+//     borderRight: "1px solid #cbd5e1", // Visible grid borders like an Excel/Tally ledger matrix
+//   },
+//   tableBodyRowElement: {
+//     borderBottom: "1px solid #e2e8f0",
+//   },
+//   selectedTableRow: {
+//     backgroundColor: "#9fc5f6",
+//   },
+//   tdElement: {
+//     padding: "6px 10px",
+//     color: "#1e293b",
+//     whiteSpace: "nowrap",
+//     fontWeight: "600",
+//     borderRight: "1px solid #e2e8f0",
+//     borderBottom: "1px solid #e2e8f0",
+//   },
+//   badgeApproved: {
+//     backgroundColor: "#f0fdf4",
+//     color: "#166534",
+//     padding: "0px 4px",
+//     border: "1px solid #bbf7d0",
+//     borderRadius: "0px",
+//     fontSize: "10px",
+//     fontWeight: "700",
+//   },
+//   badgeVoid: {
+//     backgroundColor: "#fef2f2",
+//     color: "#991b1b",
+//     padding: "0px 4px",
+//     border: "1px solid #fecaca",
+//     borderRadius: "0px",
+//     fontSize: "10px",
+//     fontWeight: "700",
+//   },
+//   paginationRow: {
+//     display: "flex",
+//     justifyContent: "space-between",
+//     alignItems: "center",
+//     padding: "6px 12px",
+//     backgroundColor: "#f1f5f9",
+//     borderTop: "2px solid #cbd5e1",
+//     flexShrink: 0,
+//     height: "36px",
+//   },
+//   paginationText: {
+//     fontSize: "11px",
+//     color: "#475569",
+//     fontWeight: "700",
+//   },
+//   paginationButtonPair: { display: "flex", gap: "4px" },
+//   pagBtnActive: {
+//     backgroundColor: "#ffffff",
+//     border: "1px solid #cbd5e1",
+//     color: "#1e293b",
+//     padding: "3px 10px",
+//     borderRadius: "0px",
+//     fontWeight: "700",
+//     fontSize: "11px",
+//     cursor: "pointer",
+//   },
+//   pagBtnDisabled: {
+//     backgroundColor: "#e2e8f0",
+//     border: "1px solid #cbd5e1",
+//     color: "#94a3b8",
+//     padding: "3px 10px",
+//     borderRadius: "0px",
+//     fontSize: "11px",
+//     cursor: "not-allowed",
+//   },
+//   loadingWrapperGrid: {
+//     display: "flex",
+//     flexDirection: "column",
+//     alignItems: "center",
+//     justifyContent: "center",
+//     minHeight: "200px",
+//     width: "100%",
+//     backgroundColor: "#ffffff",
+//     fontSize: "12px",
+//     fontWeight: "700",
+//     color: "#64748b",
+//   },
+//   emptyStateBlock: {
+//     display: "flex",
+//     alignItems: "center",
+//     justifyContent: "center",
+//     minHeight: "200px",
+//     width: "100%",
+//     backgroundColor: "#ffffff",
+//     fontSize: "12px",
+//     fontWeight: "700",
+//     color: "#94a3b8",
+//   },
+//   exportButtonDisabled: {
+//     backgroundColor: "#cbd5e1",
+//     borderColor: "#94a3b8",
+//     color: "#94a3b8",
+//     cursor: "not-allowed",
+//   },
+// };
