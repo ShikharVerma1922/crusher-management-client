@@ -119,7 +119,7 @@ export default function App() {
       {/* 🏛️ 1. MASTER TOP NAVBAR (With Integrated User Context Controls) */}
       <header style={styles.permanentHeaderRibbon}>
         <div style={styles.headerLeftBrandGroup}>
-          <img width="28" height="28" src="../src/assets/logo.png" />
+          <img width="30" height="30" src="/logo.png" alt="logo" />
 
           <div style={styles.brandText}>
             <h1 style={styles.brandTitle}>Mandar Crusher</h1>
@@ -350,13 +350,17 @@ const styles = {
     width: "100%",
     zIndex: 3000,
   },
-  headerLeftBrandGroup: { display: "flex", alignItems: "center", gap: "12px" },
+  headerLeftBrandGroup: {
+    display: "flex",
+    alignItems: "center",
+    gap: "12px",
+  },
   brandIconBox: {
     backgroundColor: "#1e293b",
     padding: "6px",
     borderRadius: "6px",
     display: "flex",
-    alignItems: "center",
+    alignItems: "baseline",
     justifyContent: "center",
   },
   brandTitle: {
