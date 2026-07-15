@@ -535,12 +535,15 @@ export default function LedgerScreen() {
                           : ticket.materialAmount.toLocaleString("en-IN")}
                       </td>
                       <td style={ledgerStyles.tdElement}>
-                        {ticket.materialRate === 0
+                        {ticket.royaltyQuantity === 0 &&
+                        ticket.materialRate === 0
                           ? "N/A"
                           : ticket.royaltyQuantity.toLocaleString()}
                       </td>
                       <td style={ledgerStyles.tdElement}>
-                        {ticket.materialRate === 0 ? "N/A" : ticket.royaltyRate}
+                        {ticket.royaltyRate === 0 && ticket.materialRate === 0
+                          ? "N/A"
+                          : ticket.royaltyRate}
                       </td>
                       <td
                         style={{
@@ -548,7 +551,7 @@ export default function LedgerScreen() {
                           textAlign: "right",
                         }}
                       >
-                        {ticket.materialRate === 0
+                        {ticket.royaltyAmount === 0
                           ? "N/A"
                           : ticket.royaltyAmount.toLocaleString("en-IN")}
                       </td>
@@ -579,7 +582,12 @@ export default function LedgerScreen() {
                       <td
                         style={{
                           ...ledgerStyles.tdElement,
-                          color: ticket.balance > 0 ? "#dc2626" : "#16a34a",
+                          color:
+                            ticket.materialRate === 0
+                              ? "gray"
+                              : ticket.balance > 0
+                                ? "#dc2626"
+                                : "#16a34a",
                           fontWeight: 700,
                           textAlign: "right",
                         }}
