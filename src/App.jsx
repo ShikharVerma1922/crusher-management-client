@@ -1,12 +1,13 @@
 // src/App.jsx
 import React, { useContext, useState, useEffect } from "react";
-import LedgerScreen from "./screens/LedgerScreen.jsx";
+import LedgerScreen from "./screens/SalesLedgerScreen.jsx";
 import LoginScreen from "./screens/LoginScreen.jsx";
 import DashboardScreen from "./screens/DashboardScreen.jsx";
 import MaterialScreen from "./screens/MaterialScreen.jsx";
 import ClerkScreen from "./screens/ClerkScreen.jsx";
 import AnalyticsExplorerScreen from "./screens/AnalyticsExplorerScreen.jsx";
 import VoidRequestsScreen from "./screens/VoidRequestScreen.jsx";
+import CustomerLedger from "./screens/customerLedgerScreen.jsx";
 import { AdminContext } from "./context/AdminContext.jsx";
 import {
   Loader2,
@@ -31,6 +32,7 @@ export default function App() {
     const verifiedValidRoutes = [
       "dashboard",
       "ledger",
+      "customer",
       "materials",
       "clerks",
       "trends",
@@ -203,6 +205,27 @@ export default function App() {
             )}
           </div>
 
+          {/* Customer Tab */}
+          <div
+            style={styles.navItemContainer}
+            onMouseEnter={() => setHoveredTab("customer")}
+            onMouseLeave={() => setHoveredTab(null)}
+          >
+            <button
+              onClick={() => setCurrentTab("customer")}
+              style={
+                currentTab === "customer"
+                  ? styles.sideTabButtonActive
+                  : styles.sideTabButton
+              }
+            >
+              <FileSpreadsheet size={18} style={{ flexShrink: 0 }} />
+            </button>
+            {hoveredTab === "customer" && (
+              <div style={styles.floatingTooltip}>Customer Ledger</div>
+            )}
+          </div>
+
           {/* Data Explorer Tab */}
           <div
             style={styles.navItemContainer}
@@ -313,6 +336,7 @@ export default function App() {
       <main style={styles.mainViewportContainer}>
         {currentTab === "dashboard" && <DashboardScreen />}
         {currentTab === "ledger" && <LedgerScreen />}
+        {currentTab === "customer" && <CustomerLedger />}
         {currentTab === "trends" && <AnalyticsExplorerScreen />}
         {currentTab === "materials" && <MaterialScreen />}
         {currentTab === "clerks" && <ClerkScreen />}
