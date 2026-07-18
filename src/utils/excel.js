@@ -57,6 +57,6 @@ export const exportToExcelFormat = (
 
   XLSX.writeFile(
     workbook,
-    `Mandar_Crusher_Ledger${searchLabel}_${fileStartLabel}_to_${fileEndLabel}.xlsx`,
+    `Sales_Ledger${searchLabel}_${fileStartLabel}_to_${fileEndLabel}.xlsx`,
   );
 };

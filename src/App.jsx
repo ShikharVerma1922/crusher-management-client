@@ -1,6 +1,7 @@
 // src/App.jsx
 import React, { useContext, useState, useEffect } from "react";
-import LedgerScreen from "./screens/SalesLedgerScreen.jsx";
+import SalesLedgerScreen from "./screens/SalesLedgerScreen.jsx";
+import PaymentsLedgerScreen from "./screens/PaymentsLedgerScreen.jsx";
 import LoginScreen from "./screens/LoginScreen.jsx";
 import DashboardScreen from "./screens/DashboardScreen.jsx";
 import MaterialScreen from "./screens/MaterialScreen.jsx";
@@ -20,67 +21,81 @@ import {
   Building2,
   ShieldAlert,
   Settings,
+  UsersRound,
+  IndianRupee,
 } from "lucide-react";
 import Setting from "./screens/Setting.jsx";
+import {
+  useNavigate,
+  Route,
+  Routes,
+  useLocation,
+  Navigate,
+} from "react-router-dom";
 
 export default function App() {
   const { isAdminAuthenticated, globalLoading, adminLogout, currentAdmin } =
     useContext(AdminContext);
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  const getInitialRouteFromUrlHash = () => {
-    const activeHashString = window.location.hash.replace("#", "");
-    const verifiedValidRoutes = [
-      "dashboard",
-      "ledger",
-      "customer",
-      "materials",
-      "clerks",
-      "trends",
-      "voids",
-      "settings",
-    ];
-    return verifiedValidRoutes.includes(activeHashString)
-      ? activeHashString
-      : "dashboard";
-  };
+  const currentTab = location.pathname.split("/")[1];
 
-  const [currentTab, setCurrentTab] = useState(getInitialRouteFromUrlHash);
+  // const getInitialRouteFromUrlHash = () => {
+  //   const activeHashString = window.location.hash.replace("#", "");
+  //   const verifiedValidRoutes = [
+  //     "dashboard",
+  //     "sales",
+  //     "customers",
+  //     "materials",
+  //     "clerks",
+  //     "trends",
+  //     "voids",
+  //     "settings",
+  //   ];
+  //   return verifiedValidRoutes.includes(activeHashString)
+  //     ? activeHashString
+  //     : "dashboard";
+  // };
+
+  // const [currentTab, setCurrentTab] = useState(getInitialRouteFromUrlHash);
 
   // Track hovered button indexes to trigger isolated floating tooltips
   const [hoveredTab, setHoveredTab] = useState(null);
-  const [liveTime, setLiveTime] = useState(
-    new Date().toLocaleTimeString("en-IN", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    }),
-  );
 
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setLiveTime(
-        new Date().toLocaleTimeString("en-IN", {
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      );
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
+  // const [liveTime, setLiveTime] = useState(
+  //   new Date().toLocaleTimeString("en-IN", {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //     second: "2-digit",
+  //   }),
+  // );
 
-  useEffect(() => {
-    window.location.hash = currentTab;
-  }, [currentTab]);
+  // useEffect(() => {
+  //   const timer = setInterval(() => {
+  //     setLiveTime(
+  //       new Date().toLocaleTimeString("en-IN", {
+  //         hour: "2-digit",
+  //         minute: "2-digit",
+  //         second: "2-digit",
+  //       }),
+  //     );
+  //   }, 1000);
+  //   return () => clearInterval(timer);
+  // }, []);
 
-  useEffect(() => {
-    const handleUrlHashFallbackEvent = () => {
-      setCurrentTab(getInitialRouteFromUrlHash());
-    };
-    window.addEventListener("hashchange", handleUrlHashFallbackEvent);
-    return () =>
-      window.removeEventListener("hashchange", handleUrlHashFallbackEvent);
-  }, []);
+  // useEffect(() => {
+  //   window.location.hash = currentTab;
+  // }, [currentTab]);
+
+  // useEffect(() => {
+  //   const handleUrlHashFallbackEvent = () => {
+  //     setCurrentTab(getInitialRouteFromUrlHash());
+  //   };
+  //   window.addEventListener("hashchange", handleUrlHashFallbackEvent);
+  //   return () =>
+  //     window.removeEventListener("hashchange", handleUrlHashFallbackEvent);
+  // }, []);
 
   if (globalLoading) {
     return (
@@ -134,17 +149,6 @@ export default function App() {
         </div>
 
         <div style={styles.headerRightProfileGroup}>
-          {/* Live Shift Clock Display */}
-          {/* <div style={styles.utilityBadge}>
-            <span style={styles.utilityText}>
-              Shift Time:{" "}
-              <strong style={{ color: "#f8fafc", fontFamily: "monospace" }}>
-                {liveTime}
-              </strong>
-            </span>
-          </div> */}
-
-          {/* 👑 Relocated User Credentials & Logout Button Trigger */}
           <div style={styles.navbarUserCard}>
             <span style={{ ...styles.navProfileName }}>
               {currentAdmin?.name || "Owner Admin"}
@@ -170,7 +174,7 @@ export default function App() {
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => setCurrentTab("dashboard")}
+              onClick={() => navigate("/dashboard")}
               style={
                 currentTab === "dashboard"
                   ? styles.sideTabButtonActive
@@ -187,41 +191,61 @@ export default function App() {
           {/* Weighbridge Ledger Tab */}
           <div
             style={styles.navItemContainer}
-            onMouseEnter={() => setHoveredTab("ledger")}
+            onMouseEnter={() => setHoveredTab("sales")}
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => setCurrentTab("ledger")}
+              onClick={() => navigate("/sales")}
               style={
-                currentTab === "ledger"
+                currentTab === "sales"
                   ? styles.sideTabButtonActive
                   : styles.sideTabButton
               }
             >
               <FileSpreadsheet size={18} style={{ flexShrink: 0 }} />
             </button>
-            {hoveredTab === "ledger" && (
-              <div style={styles.floatingTooltip}>Weighbridge Ledger</div>
+            {hoveredTab === "sales" && (
+              <div style={styles.floatingTooltip}>Sales Ledger</div>
             )}
           </div>
 
-          {/* Customer Tab */}
+          {/* Payment Ledger Tab */}
           <div
             style={styles.navItemContainer}
-            onMouseEnter={() => setHoveredTab("customer")}
+            onMouseEnter={() => setHoveredTab("payments")}
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => setCurrentTab("customer")}
+              onClick={() => navigate("/payments")}
               style={
-                currentTab === "customer"
+                currentTab === "payments"
                   ? styles.sideTabButtonActive
                   : styles.sideTabButton
               }
             >
-              <FileSpreadsheet size={18} style={{ flexShrink: 0 }} />
+              <IndianRupee size={18} style={{ flexShrink: 0 }} />
             </button>
-            {hoveredTab === "customer" && (
+            {hoveredTab === "payments" && (
+              <div style={styles.floatingTooltip}>Payments Ledger</div>
+            )}
+          </div>
+          {/* Customer Tab */}
+          <div
+            style={styles.navItemContainer}
+            onMouseEnter={() => setHoveredTab("customers")}
+            onMouseLeave={() => setHoveredTab(null)}
+          >
+            <button
+              onClick={() => navigate("/customers")}
+              style={
+                currentTab === "customers"
+                  ? styles.sideTabButtonActive
+                  : styles.sideTabButton
+              }
+            >
+              <UsersRound size={18} style={{ flexShrink: 0 }} />
+            </button>
+            {hoveredTab === "customers" && (
               <div style={styles.floatingTooltip}>Customer Ledger</div>
             )}
           </div>
@@ -233,7 +257,7 @@ export default function App() {
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => setCurrentTab("trends")}
+              onClick={() => navigate("/trends")}
               style={
                 currentTab === "trends"
                   ? styles.sideTabButtonActive
@@ -247,48 +271,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Pricing Matrix Tab */}
-          {/* <div
-            style={styles.navItemContainer}
-            onMouseEnter={() => setHoveredTab("materials")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <button
-              onClick={() => setCurrentTab("materials")}
-              style={
-                currentTab === "materials"
-                  ? styles.sideTabButtonActive
-                  : styles.sideTabButton
-              }
-            >
-              <Layers size={18} style={{ flexShrink: 0 }} />
-            </button>
-            {hoveredTab === "materials" && (
-              <div style={styles.floatingTooltip}>Pricing Matrix</div>
-            )}
-          </div> */}
-
-          {/* Cabin Operators Tab */}
-          {/* <div
-            style={styles.navItemContainer}
-            onMouseEnter={() => setHoveredTab("clerks")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <button
-              onClick={() => setCurrentTab("clerks")}
-              style={
-                currentTab === "clerks"
-                  ? styles.sideTabButtonActive
-                  : styles.sideTabButton
-              }
-            >
-              <Users size={18} style={{ flexShrink: 0 }} />
-            </button>
-            {hoveredTab === "clerks" && (
-              <div style={styles.floatingTooltip}>Cabin Operators</div>
-            )}
-          </div> */}
-
           {/* Void Clearances Tab */}
           <div
             style={styles.navItemContainer}
@@ -296,7 +278,7 @@ export default function App() {
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => setCurrentTab("voids")}
+              onClick={() => navigate("/voids")}
               style={
                 currentTab === "voids"
                   ? styles.sideTabButtonActive
@@ -316,7 +298,7 @@ export default function App() {
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => setCurrentTab("settings")}
+              onClick={() => navigate("/settings")}
               style={
                 currentTab === "settings"
                   ? styles.sideTabButtonActive
@@ -334,14 +316,21 @@ export default function App() {
 
       {/* 🌊 3. MAIN PORT CANVAS CONTROLLER */}
       <main style={styles.mainViewportContainer}>
-        {currentTab === "dashboard" && <DashboardScreen />}
-        {currentTab === "ledger" && <LedgerScreen />}
-        {currentTab === "customer" && <CustomerLedger />}
-        {currentTab === "trends" && <AnalyticsExplorerScreen />}
-        {currentTab === "materials" && <MaterialScreen />}
-        {currentTab === "clerks" && <ClerkScreen />}
-        {currentTab === "voids" && <VoidRequestsScreen />}
-        {currentTab === "settings" && <Setting />}
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+
+          <Route path="/dashboard" element={<DashboardScreen />} />
+          <Route path="/sales" element={<SalesLedgerScreen />} />
+          <Route path="/payments" element={<PaymentsLedgerScreen />} />
+
+          <Route path="/customers/:customerId?" element={<CustomerLedger />} />
+
+          <Route path="/trends" element={<AnalyticsExplorerScreen />} />
+          <Route path="/materials" element={<MaterialScreen />} />
+          <Route path="/clerks" element={<ClerkScreen />} />
+          <Route path="/voids" element={<VoidRequestsScreen />} />
+          <Route path="/settings" element={<Setting />} />
+        </Routes>
       </main>
     </div>
   );

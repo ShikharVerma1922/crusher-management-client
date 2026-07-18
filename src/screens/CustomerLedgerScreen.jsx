@@ -1,10 +1,17 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, act } from "react";
 import { adminApi } from "../lib/axiosApi";
+import DateRangeFilter from "../components/DateRangeFilter";
+import { Download, FileWarning, RefreshCw, TriangleAlert } from "lucide-react";
+import { useParams, useNavigate } from "react-router-dom";
+import { exportToExcelFormat } from "../utils/customerExcel";
+import { ledgerStyles } from "../styles/ledgerStyles";
 
 export default function CustomerLedger() {
   // --- UI Layout & Interaction States ---
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  const [activeCustomer, setActiveCustomer] = useState({});
+
+  const navigate = useNavigate();
+  const { customerId } = useParams();
+  // const [activeCustomer, setActiveCustomer] = useState({});
   const [formData, setFormData] = useState({
     amountPaid: "", // Controlled input for numerical value
     paymentMode: "BANK_TRANSFER", // Matches backend schema options: CASH, BANK_TRANSFER, UPI, CHEQUE
@@ -17,74 +24,152 @@ export default function CustomerLedger() {
 
   // --- Core State Registries ---
   const [customers, setCustomers] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [fetchError, setFetchError] = useState(null);
 
   // --- Core Operational States ---
-  const [dateFrom, setDateFrom] = useState("2026-07-01");
-  const [dateTo, setDateTo] = useState("2026-07-15");
   const [ledgerData, setLedgerData] = useState({
     openingBalance: 0,
     closingBalance: 0,
     items: [], // List of combined Transactions (Debits) and Payments (Credits)
   });
+  const [exporting, setExporting] = useState(false);
   const [isLedgerLoading, setIsLedgerLoading] = useState(false);
   const [ledgerError, setLedgerError] = useState(null);
 
-  // --- 🌐 API DATA FETCH DIRECTIVE: CHRONOLOGICAL STATEMENT ENGINE ---
-  useEffect(() => {
-    // We need both a selected customer and a valid date period to run the fetch query
-    if (!selectedCustomerId) return;
+  const activeCustomer = customers.find((c) => c.id === customerId);
 
-    const fetchRunningLedger = async () => {
-      setIsLedgerLoading(true);
-      setLedgerError(null);
+  // 🗓️ 1. TIME-SERIES BOUNDARY INITIALIZATION CONTEXT
+  // Returns a raw "YYYY-MM-DD" string mapping to local calendar states cleanly
+  const formatLocalCalendarDate = (dateObj) => {
+    const year = dateObj.getFullYear();
+    // Months are 0-indexed in JS (January is 0), so we add 1 and pad with leading zeros
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0");
+    const day = String(dateObj.getDate()).padStart(2, "0");
 
-      try {
-        // 🔌 API ENDPOINT LOCATION:
-        // URL Target: GET /api/ledgers?customerId=${selectedCustomerId}&from=${dateFrom}&to=${dateTo}
-        // This endpoint must aggregate invoices and payments before 'dateFrom' to return 'openingBalance'
+    return `${year}-${month}-${day}`; // Returns perfectly aligned "YYYY-MM-DD"
+  };
 
-        const response = await adminApi.get(
-          `/customers/${selectedCustomerId}?from=${dateFrom}&to=${dateTo}`,
-        );
+  const [dateRangePreset, setDateRangePreset] = useState("this_month"); // 🌟 Default standard fallback configuration
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
 
-        if (response.status !== 200) {
-          throw new Error(
-            `CRITICAL SYSTEM ERR: HTTP Status ${response.status}`,
-          );
-        }
+  const filteredCustomers = customers.filter((customer) =>
+    customer.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
-        const data = response.data?.data;
+  // ⚙️ 2. MATHEMATICAL TIME INTERVAL COMPUTATION ENGINE
 
-        // Expected Data Contract:
-        // {
-        //   openingBalance: number,
-        //   closingBalance: number,
-        //   items: Array<{ id, type: "DEBIT"|"CREDIT", date, referenceNumber, particulars, amount }>
-        // }
-        setLedgerData({
-          openingBalance: data.openingBalance || 0,
-          closingBalance: data.closingBalance || 0,
-          items: data.items || [],
-        });
-        console.log(data);
-        setActiveCustomer(
-          customers.find((cust) => cust.id === selectedCustomerId),
-        );
-      } catch (err) {
-        console.error(
-          "Failed to sync customer statement context records:",
-          err,
-        );
-        setLedgerError(err.message || "Failed to load statement register.");
-      } finally {
-        setIsLedgerLoading(false);
+  const calculatePresetBoundaries = useCallback((preset) => {
+    const today = new Date();
+    const shiftStart = new Date(today);
+
+    if (shiftStart.getHours() < 9) {
+      shiftStart.setDate(shiftStart.getDate() - 1);
+    }
+
+    shiftStart.setHours(9, 0, 0, 0);
+
+    let start = new Date(shiftStart);
+    const end = new Date();
+
+    switch (preset) {
+      case "today":
+        break;
+      case "this_week": {
+        const dayOfWeek = shiftStart.getDay();
+        const mondayOffset = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        start.setDate(shiftStart.getDate() - mondayOffset);
+        break;
       }
-    };
+      case "this_month":
+        start = new Date(
+          shiftStart.getFullYear(),
+          shiftStart.getMonth(),
+          1,
+          9,
+          0,
+          0,
+          0,
+        );
+        break;
+      case "this_year":
+        start = new Date(shiftStart.getFullYear(), 0, 1, 9, 0, 0, 0);
+        break;
+      case "last_7_days":
+        start.setDate(shiftStart.getDate() - 7);
+        break;
+      case "last_30_days":
+        start.setDate(shiftStart.getDate() - 30);
+        break;
+      case "last_3_months":
+        start.setMonth(shiftStart.getMonth() - 3);
+        break;
+      case "last_6_months":
+        start.setMonth(shiftStart.getMonth() - 6);
+        break;
+      case "last_1_year":
+        start.setFullYear(shiftStart.getFullYear() - 1);
+        break;
+      case "custom":
+        return;
+      default:
+        start = new Date(
+          shiftStart.getFullYear(),
+          shiftStart.getMonth(),
+          1,
+          0,
+          0,
+          0,
+          0,
+        );
+    }
 
+    // 🌟 Sync structural calendar strings safely
+    setStartDate(formatLocalCalendarDate(start));
+    setEndDate(formatLocalCalendarDate(end));
+  }, []);
+
+  // 🚀 3. BOOT ENGINE RUNTIME DISPATCHER
+  // Evaluates once on mount to establish your 'this_month' baseline layout vectors
+  useEffect(() => {
+    calculatePresetBoundaries(dateRangePreset);
+  }, [dateRangePreset, calculatePresetBoundaries]);
+
+  // --- 🌐 API DATA FETCH DIRECTIVE: CHRONOLOGICAL STATEMENT ENGINE ---
+  const fetchRunningLedger = useCallback(async () => {
+    if (!customerId) return;
+
+    setIsLedgerLoading(true);
+    setLedgerError(null);
+
+    try {
+      const response = await adminApi.get(
+        `/customers/${customerId}?from=${startDate}&to=${endDate}`,
+      );
+
+      const data = response.data.data;
+
+      setLedgerData({
+        openingBalance: data.openingBalance || 0,
+        closingBalance: data.closingBalance || 0,
+        items: data.items || [],
+      });
+
+      // setActiveCustomer(
+      //   customers.find((cust) => cust.id === selectedCustomerId),
+      // );
+    } catch (err) {
+      setLedgerError(err.message || "Failed to load statement register.");
+    } finally {
+      setIsLedgerLoading(false);
+    }
+  }, [customerId, startDate, endDate, customers]);
+
+  useEffect(() => {
     fetchRunningLedger();
-  }, [selectedCustomerId, dateFrom, dateTo]); // Refetches automatically if customer or dates change
+  }, [fetchRunningLedger]);
 
   // --- 🌐 API DATA FETCH DIRECTIVE ENGINE ---
   useEffect(() => {
@@ -107,8 +192,10 @@ export default function CustomerLedger() {
 
         setCustomers(response.data?.data);
 
-        if (response.data.data.length > 0) {
-          setSelectedCustomerId(response.data.data[0].id);
+        if (!customerId && response.data.data.length > 0) {
+          navigate(`/customers/${response.data.data[0].id}`, {
+            replace: true,
+          });
         }
       } catch (err) {
         console.error("Database connection failure context logs:", err);
@@ -135,7 +222,7 @@ export default function CustomerLedger() {
     try {
       // 🔌 API ENDPOINT LOCATION FOR PAYMENT SUBMISSION
       const response = await adminApi.post(`/payments`, {
-        customerId: selectedCustomerId,
+        customerId,
         amountPaid: parsedAmount,
         paymentMode: formData.paymentMode,
         referenceNo: formData.referenceNo,
@@ -155,7 +242,7 @@ export default function CustomerLedger() {
       // 2. Update Left Sidebar Customer Balance State Locally
       setCustomers((prevCustomers) =>
         prevCustomers.map((cust) =>
-          cust.id === selectedCustomerId
+          cust.id === customerId
             ? { ...cust, outstandingBalance: result.newBalance }
             : cust,
         ),
@@ -163,8 +250,7 @@ export default function CustomerLedger() {
 
       // 3. Force Statement Refetch
       // This updates the central running ledger layout dynamically
-      setSelectedCustomerId(null);
-      setTimeout(() => setSelectedCustomerId(selectedCustomerId), 50);
+      await fetchRunningLedger();
 
       // 4. Reset Form & Close Slide Drawer
       setFormData({
@@ -179,6 +265,25 @@ export default function CustomerLedger() {
       alert(`Voucher Posting Failed: ${error.message}`);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      setExporting(true);
+
+      const start = new Date(startDate);
+      start.setHours(9, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setDate(end.getDate() + 1);
+      end.setHours(8, 59, 59, 999);
+
+      exportToExcelFormat(ledgerData, activeCustomer.name, startDate, endDate);
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -209,8 +314,25 @@ export default function CustomerLedger() {
         }}
       >
         {/* 1. LEFT COLUMN: MASTER CONTROLS (300px fixed width) */}
-        <div style={styles.leftMasterPane}>
-          <div style={styles.paneHeader}>MASTER REGISTER</div>
+        <div
+          style={{
+            ...styles.leftMasterPane,
+            opacity: isDrawerOpen ? "0.5" : "1",
+          }}
+        >
+          <div style={styles.paneHeader}>CUSTOMER REGISTER</div>
+          <div style={{ padding: "8px" }}>
+            <div style={styles.searchContainer}>
+              <span style={styles.searchIcon}>🔍</span>
+              <input
+                type="text"
+                placeholder="Search customer..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                style={styles.searchInput}
+              />
+            </div>
+          </div>
           <div
             style={{
               padding: "8px",
@@ -269,19 +391,19 @@ export default function CustomerLedger() {
             {/* Status 4: True production ledger row listing render map */}
             {!isLoading &&
               !fetchError &&
-              customers.map((cust) => {
+              filteredCustomers.map((cust) => {
                 // Formats currency string explicitly per Indian LAC numbering standard
                 const formattedBalance = new Intl.NumberFormat("en-IN", {
                   minimumFractionDigits: 2,
                   maximumFractionDigits: 2,
                 }).format(cust.outstandingBalance || 0);
 
-                const isCurrentActiveTarget = selectedCustomerId === cust.id;
+                const isCurrentActiveTarget = customerId === cust.id;
 
                 return (
                   <button
                     key={cust.id}
-                    onClick={() => setSelectedCustomerId(cust.id)}
+                    onClick={() => navigate(`/customers/${cust.id}`)}
                     style={{
                       ...styles.selectionButton,
                       backgroundColor: isCurrentActiveTarget
@@ -319,59 +441,39 @@ export default function CustomerLedger() {
         <div
           style={{
             ...styles.centerLedgerStatementPane,
-            marginRight: isDrawerOpen ? "360px" : "0px",
+            marginRight: isDrawerOpen ? "320px" : "0px",
           }}
         >
           {/* 📅 ERP DURATION PERIOD CONTROL BAR */}
           <div style={styles.filterControlPanel}>
-            <div style={styles.datePickerWrapper}>
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  color: "#475569",
-                }}
-              >
-                F2: PERIOD FROM
-              </span>
-              <div style={styles.dateInputGroup}>
-                <input
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                  style={styles.dateField}
+            <DateRangeFilter
+              dateRangePreset={dateRangePreset}
+              setDateRangePreset={setDateRangePreset}
+              startDate={startDate}
+              setStartDate={setStartDate}
+              endDate={endDate}
+              setEndDate={setEndDate}
+              onFetchData={fetchRunningLedger}
+            />
+            <button
+              onClick={handleExport}
+              disabled={exporting}
+              style={{
+                ...ledgerStyles.exportButton,
+                ...(exporting && ledgerStyles.exportButtonDisabled),
+              }}
+            >
+              {exporting ? (
+                <RefreshCw
+                  size={16}
+                  style={{
+                    animation: "spin 1s linear infinite",
+                  }}
                 />
-              </div>
-
-              <span
-                style={{
-                  fontSize: "11px",
-                  fontWeight: "700",
-                  color: "#475569",
-                }}
-              >
-                TO
-              </span>
-              <div style={styles.dateInputGroup}>
-                <input
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                  style={styles.dateField}
-                />
-              </div>
-
-              {/* Reset / Refresh Trigger */}
-              <button
-                onClick={() => {
-                  setDateFrom("2026-07-01");
-                  setDateTo("2026-07-15");
-                }}
-                style={styles.refreshButton}
-              >
-                Clear
-              </button>
-            </div>
+              ) : (
+                <Download size={16} />
+              )}
+            </button>
           </div>
           {/* LEDGER WORKSPACE HEADER STRIP */}
           {activeCustomer && (
@@ -384,7 +486,7 @@ export default function CustomerLedger() {
                     fontWeight: "700",
                   }}
                 >
-                  LEDGER VIEW FOR:
+                  CUSTOMER LEDGER:
                 </span>
                 <h2
                   style={{
@@ -401,7 +503,7 @@ export default function CustomerLedger() {
                 onClick={() => setIsDrawerOpen(true)}
                 style={styles.actionPaymentLaunchBtn}
               >
-                Alt + P: Add Payment
+                Add Payment
               </button>
             </div>
           )}
@@ -422,11 +524,23 @@ export default function CustomerLedger() {
                 <table style={styles.masterTableElement}>
                   <thead style={styles.stickyTableHeader}>
                     <tr>
-                      <th style={{ ...styles.thElement, width: "100px" }}>
+                      <th
+                        style={{
+                          ...styles.thElement,
+                          width: "100px",
+                          minWidth: "60px",
+                        }}
+                      >
                         Date
                       </th>
-                      <th style={{ ...styles.thElement, width: "110px" }}>
-                        Voucher No
+                      <th
+                        style={{
+                          ...styles.thElement,
+                          width: "110px",
+                          minWidth: "50px",
+                        }}
+                      >
+                        Ref
                       </th>
                       <th style={{ ...styles.thElement, width: "240px" }}>
                         Particulars
@@ -438,7 +552,7 @@ export default function CustomerLedger() {
                           textAlign: "right",
                         }}
                       >
-                        Debit (Dr) (₹)
+                        Debit
                       </th>
                       <th
                         style={{
@@ -447,7 +561,7 @@ export default function CustomerLedger() {
                           textAlign: "right",
                         }}
                       >
-                        Credit (Cr) (₹)
+                        Credit
                       </th>
                       <th
                         style={{
@@ -457,7 +571,7 @@ export default function CustomerLedger() {
                           borderRight: "none",
                         }}
                       >
-                        Running Bal (₹)
+                        Balance
                       </th>
                     </tr>
                   </thead>
@@ -470,7 +584,7 @@ export default function CustomerLedger() {
                       }}
                     >
                       <td style={styles.tdElement}>
-                        {new Date(dateFrom).toLocaleDateString("en-IN", {
+                        {new Date(startDate).toLocaleDateString("en-IN", {
                           day: "2-digit",
                           month: "short",
                           year: "2-digit",
@@ -512,7 +626,7 @@ export default function CustomerLedger() {
                           color: "#475569",
                         }}
                       >
-                        {formatLedgerBalance(ledgerData.openingBalance)} Dr
+                        {formatLedgerBalance(ledgerData.openingBalance)}
                       </td>
                     </tr>
 
@@ -548,11 +662,22 @@ export default function CustomerLedger() {
                             <td
                               style={{ ...styles.tdElement, fontWeight: "700" }}
                             >
-                              {item.referenceNumber}
+                              {item.type === "CREDIT" ? "PAY-" : "INV-"}
+                              {item.referenceNumber}{" "}
+                              {item?.rateStatus === "OPEN" && (
+                                <TriangleAlert size={10} color={"orange"} />
+                              )}
                             </td>
 
                             {/* Particulars explanation string */}
-                            <td style={styles.tdElement}>{item.particulars}</td>
+                            <td style={styles.tdElement}>
+                              <div
+                                style={styles.particulars}
+                                title={item.particulars}
+                              >
+                                {item.particulars}
+                              </div>
+                            </td>
 
                             {/* Debit value (if transaction) */}
                             <td
@@ -614,7 +739,7 @@ export default function CustomerLedger() {
                         }}
                       >
                         CLOSING BALANCE C/F (As of{" "}
-                        {new Date(dateTo).toLocaleDateString("en-IN", {
+                        {new Date(endDate).toLocaleDateString("en-IN", {
                           day: "2-digit",
                           month: "short",
                         })}
@@ -796,9 +921,7 @@ export default function CustomerLedger() {
 
               {/* 4. Input: Remarks */}
               <div style={styles.formInputStackUnit}>
-                <label style={styles.formLabelElement}>
-                  Narration / Audit Remarks
-                </label>
+                <label style={styles.formLabelElement}>Remarks</label>
                 <textarea
                   rows="3"
                   placeholder="Enter receipt context remarks..."
@@ -824,26 +947,18 @@ export default function CustomerLedger() {
                   onClick={() => setIsDrawerOpen(false)}
                   style={styles.cancelFormVoucherBtn}
                 >
-                  [ESC] Cancel
+                  Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
                   style={styles.commitFormVoucherBtn}
                 >
-                  {isSubmitting ? "POSTING..." : "[ENTER] Save Receipt"}
+                  {isSubmitting ? "POSTING..." : "Save Receipt"}
                 </button>
               </div>
             </form>
           </div>
-        </div>
-      </div>
-
-      {/* 🎹 ERP FOOTER MONITOR SYSTEM */}
-      <div style={styles.systemFooterControlRegistry}>
-        <div>Active Context Operator Terminal</div>
-        <div style={{ color: "#38bdf8", fontWeight: "700" }}>
-          SPLIT SCREEN INTERACTION GRID READY
         </div>
       </div>
     </div>
@@ -899,6 +1014,7 @@ const styles = {
     alignItems: "center",
     flexWrap: "nowrap",
     flexShrink: 0,
+    marginBottom: "4px",
   },
   datePickerWrapper: {
     display: "flex",
@@ -976,6 +1092,7 @@ const styles = {
     borderRight: "1px solid #cbd5e1",
     backgroundColor: "#ffffff",
     display: "flex",
+    // margin: "4px 0px 4px 0px",
     flexDirection: "column",
     flexShrink: 0,
   },
@@ -1033,7 +1150,7 @@ const styles = {
     flex: 1,
     display: "flex",
     flexDirection: "column",
-    padding: "8px 12px 12px 12px",
+    padding: "8px 12px 4px 8px",
     overflow: "hidden",
     transition: "margin-right 0.2s ease-in-out", // Smooth shift to clear space for open drawer
   },
@@ -1091,7 +1208,7 @@ const styles = {
     zIndex: 10,
   },
   thElement: {
-    padding: "8px 10px",
+    padding: "8px 20px",
     color: "#475569",
     fontWeight: "700",
     textTransform: "uppercase",
@@ -1107,9 +1224,17 @@ const styles = {
   tdElement: {
     padding: "6px 10px",
     color: "#1e293b",
-    whiteSpace: "nowrap",
+    whiteSpace: "normal",
+    verticalAlign: "top",
+    wordBreak: "break-word",
     fontWeight: "600",
     borderRight: "1px solid #e2e8f0",
+  },
+  particulars: {
+    maxWidth: "240px",
+    whiteSpace: "normal",
+    wordBreak: "break-word",
+    lineHeight: "1.4",
   },
   badgeApproved: {
     backgroundColor: "#f0fdf4",
@@ -1142,7 +1267,7 @@ const styles = {
     top: 0,
     bottom: 0,
     right: 0,
-    width: "360px",
+    width: "320px",
     backgroundColor: "#ffffff",
     borderLeft: "1px solid #e2e8f0",
     boxShadow: "-2px 0 10px rgba(15,23,42,0.08)",
