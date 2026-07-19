@@ -196,7 +196,7 @@ export default function AnalyticsExplorerScreen() {
                     <Line
                       yAxisId="quantity"
                       type="linear"
-                      dataKey="quantity"
+                      dataKey="materialQuantity"
                       stroke="#2563eb"
                       strokeWidth={3}
                       dot={false}

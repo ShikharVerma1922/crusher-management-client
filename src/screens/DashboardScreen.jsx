@@ -13,6 +13,7 @@ import {
   Layers,
 } from "lucide-react";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
+import { ledgerStyles } from "../styles/ledgerStyles.js";
 
 export default function DashboardScreen() {
   const { adminApi } = useContext(AdminContext);
@@ -155,9 +156,15 @@ export default function DashboardScreen() {
   }, [startDate, endDate, fetchDashboardAnalytics]);
 
   return (
-    <div className="dashboard-screen" style={styles.viewViewportContainer}>
+    <div
+      className="dashboard-screen"
+      style={ledgerStyles.viewViewportContainer}
+    >
       {/* 📌 LOCKED STATIC TOP BANNER: This section will NEVER scroll or move */}
-      <div className="dashboard-static-header" style={styles.staticHeaderBlock}>
+      <div
+        className="dashboard-static-header"
+        style={ledgerStyles.staticHeaderBlock}
+      >
         {/* <div style={styles.actionHeader}>
           <div>
             <h1 style={styles.pageTitle}>DASHBOARD</h1>
@@ -166,7 +173,10 @@ export default function DashboardScreen() {
 
         <div
           className="dashboard-filter-panel"
-          style={styles.filterControlPanel}
+          style={{
+            ...ledgerStyles.filterControlPanel,
+            justifyContent: "space-between",
+          }}
         >
           <div
             className="dashboard-window-label"
@@ -184,7 +194,7 @@ export default function DashboardScreen() {
 
           <div
             className="dashboard-date-picker-wrapper"
-            style={styles.datePickerWrapper}
+            style={ledgerStyles.datePickerWrapper}
           >
             <DateRangeFilter
               dateRangePreset={dateRangePreset}
@@ -199,7 +209,7 @@ export default function DashboardScreen() {
         </div>
 
         {errorMessage && (
-          <div style={styles.errorAlertCard}>
+          <div style={ledgerStyles.errorAlertCard}>
             <AlertCircle size={18} style={{ marginRight: 8 }} />
             <span>{errorMessage}</span>
           </div>
@@ -415,191 +425,73 @@ export default function DashboardScreen() {
 
 // 🎨 CORE STABILIZED RESPONSIVE GRID CSS PROPERTY MATRIX MAP
 const styles = {
-  viewViewportContainer: {
-    display: "flex",
-    flexDirection: "column",
-    position: "relative",
-    height: "100vh",
-    minHeight: "100vh",
-    overflowY: "auto",
-    overflowX: "hidden",
-    backgroundColor: "#f8fafc",
-    width: "100%",
-    boxSizing: "border-box",
-  },
-  staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
-    flexShrink: 0,
-    width: "100%",
-    boxSizing: "border-box",
-    backgroundColor: "#f8fafc",
-    zIndex: 20,
-    position: "sticky",
-    top: 0,
-  },
-  actionHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: "10px",
-  },
-  pageTitle: {
-    fontSize: "20px",
-    fontWeight: "800",
-    color: "#0f172a",
-    margin: 0,
-  },
-  pageSubtitle: {
-    fontSize: "12px",
-    color: "#64748b",
-    marginTop: "2px",
-    margin: 0,
-  },
-  filterControlPanel: {
-    display: "flex",
-    backgroundColor: "#ffffff",
-    padding: "12px",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-    alignItems: "center",
-    justifyContent: "space-between",
-    boxSizing: "border-box",
-    width: "100%",
-  },
-  datePickerWrapper: { display: "flex", alignItems: "center", gap: "8px" },
-  dropdownInputGroup: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#f1f5f9",
-    border: "1px solid #cbd5e1",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
-  },
-  selectDropdownElement: {
-    border: "none",
-    backgroundColor: "transparent",
-    outline: "none",
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#334155",
-    cursor: "pointer",
-  },
-  dateInputGroupReadOnly: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#f8fafc",
-    border: "1px solid #e2e8f0",
-    borderRadius: "6px",
-    padding: "0 8px",
-    height: "32px",
-  },
-  dateField: {
-    border: "none",
-    backgroundColor: "transparent",
-    outline: "none",
-    padding: "4px 0",
-    color: "#475569",
-    fontSize: "13px",
-    width: "110px",
-    fontFamily: "inherit",
-    textAlign: "center",
-  },
-  refreshButton: {
-    backgroundColor: "#0f172a",
-    color: "#ffffff",
-    height: "32px",
-    width: "32px",
-    borderRadius: "6px",
-    border: "none",
-    cursor: "pointer",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  errorAlertCard: {
-    display: "flex",
-    alignItems: "center",
-    backgroundColor: "#fef2f2",
-    border: "1px solid #fca5a5",
-    color: "#991b1b",
-    padding: "8px 12px",
-    borderRadius: "6px",
-    marginTop: "8px",
-    fontSize: "12px",
-  },
-
-  // Isolate Scroller Sheet Configurations
   dynamicScrollBodyWrapper: {
     flex: 1,
     minHeight: 0,
-    padding: "0px 24px 24px 24px",
-    overflowY: "auto", // 🌟 CRITICAL 2: Scrolling constraints are applied EXCLUSIVELY to data components below the navigation headers
-    overflowX: "hidden", // Slaughters horizontal layout visual breaks completely
-    scrollbarWidth: "none",
-    msOverflowStyle: "none",
+    padding: "12px 16px 16px 16px",
+    overflowY: "auto",
+    overflowX: "hidden",
     boxSizing: "border-box",
     width: "100%",
+    backgroundColor: "#ffffff",
   },
   dashboardGridRowsArea: {
     display: "flex",
     flexDirection: "column",
-    gap: "20px",
+    gap: "12px",
     width: "100%",
     boxSizing: "border-box",
-    paddingBottom: "12px",
   },
   kpiCardsGridContainer: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", // Dynamically stretches column width values to fill screen matrix cleanly
-    gap: "16px",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+    gap: "8px",
     width: "100%",
     boxSizing: "border-box",
   },
   kpiCardElement: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#ffffff",
-    padding: "20px",
-    borderRadius: "10px",
-    border: "1px solid #e2e8f0",
-    boxShadow: "0 1px 2px 0 rgba(0,0,0,0.02)",
+    backgroundColor: "#f8fafc",
+    padding: "10px 12px",
+    border: "1px solid #cbd5e1",
     boxSizing: "border-box",
   },
   iconBadgeWrapper: {
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    width: "44px",
-    height: "44px",
-    borderRadius: "8px",
+    width: "32px",
+    height: "32px",
+    border: "1px solid #cbd5e1",
+    backgroundColor: "#e2e8f0",
     flexShrink: 0,
-    marginRight: "16px",
+    marginRight: "10px",
   },
-  kpiDataLabelColumn: { display: "flex", flexDirection: "column" },
+  kpiDataLabelColumn: {
+    display: "flex",
+    flexDirection: "column",
+  },
   kpiMetaTextTitle: {
-    fontSize: "12px",
+    fontSize: "10px",
     color: "#64748b",
-    fontWeight: "600",
+    fontWeight: "700",
     textTransform: "uppercase",
-    letterSpacing: "0.3px",
+    letterSpacing: "0.5px",
   },
   kpiValueMetricsValue: {
-    fontSize: "22px",
+    fontSize: "16px",
     fontWeight: "800",
     color: "#0f172a",
-    marginTop: "4px",
-    letterSpacing: "-0.5px",
+    marginTop: "2px",
   },
 
   tableBlockSegmentContainer: {
     display: "flex",
     flexDirection: "column",
     backgroundColor: "#ffffff",
-    border: "1px solid #e2e8f0",
-    borderRadius: "10px",
-    padding: "20px",
-    boxShadow: "0 1px 2px 0 rgba(0,0,0,0.02)",
+    border: "2px solid #0f172a",
+    padding: "0px", // Flushed internal cell contents directly to frame border limits
     boxSizing: "border-box",
     width: "100%",
   },
@@ -607,58 +499,68 @@ const styles = {
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    marginBottom: "16px",
+    backgroundColor: "#1e293b",
+    padding: "6px 10px",
+    margin: 0,
   },
   segmentTitleLabel: {
-    fontSize: "15px",
-    fontWeight: "800",
-    color: "#1e293b",
+    fontSize: "11px",
+    fontWeight: "700",
+    color: "#ffffff",
+    textTransform: "uppercase",
     margin: 0,
   },
   tableBorderGridWrapper: {
-    border: "1px solid #f1f5f9",
-    borderRadius: "8px",
     overflowX: "auto",
     width: "100%",
+    backgroundColor: "#cbd5e1",
   },
   materialDataGridTable: {
     width: "100%",
     borderCollapse: "collapse",
     textAlign: "left",
-    fontSize: "13px",
+    fontSize: "12px",
+    fontFamily: "monospace",
   },
   gridHeaderElementRow: {
-    backgroundColor: "#f8fafc",
-    borderBottom: "1px solid #e2e8f0",
+    backgroundColor: "#334155",
+    borderBottom: "2px solid #0f172a",
   },
   tableThCellLabel: {
-    padding: "12px 16px",
-    color: "#475569",
+    padding: "8px 10px",
+    color: "#f8fafc",
     fontWeight: "700",
     textTransform: "uppercase",
     fontSize: "11px",
     whiteSpace: "nowrap",
+    borderRight: "1px solid #475569",
   },
-  gridBodyRowMarkupLine: { borderBottom: "1px solid #f1f5f9" },
+  gridBodyRowMarkupLine: {
+    borderBottom: "1px solid #cbd5e1",
+    backgroundColor: "#ffffff",
+  },
   tableTdCellValue: {
-    padding: "14px 16px",
-    color: "#334155",
+    padding: "6px 10px",
+    color: "#1e293b",
     whiteSpace: "nowrap",
+    borderRight: "1px solid #e2e8f0",
+    verticalAlign: "middle",
   },
   loadingWrapperGrid: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     justifyContent: "center",
-    minHeight: "300px",
+    minHeight: "200px",
     width: "100%",
+    backgroundColor: "#f8fafc",
+    border: "1px dashed #cbd5e1",
+    fontWeight: "700",
+    color: "#475569",
+    textTransform: "uppercase",
+    letterSpacing: "0.5px",
   },
   spinnerElement: {
-    width: "28px",
-    height: "28px",
-    border: "3px solid #e2e8f0",
-    borderTopColor: "#2563eb",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
+    display: "none", // Handled clean minimal text placeholders inside industrial ERP frameworks instead of active CSS animation nodes
   },
 };

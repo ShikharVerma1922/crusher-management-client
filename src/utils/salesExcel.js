@@ -9,7 +9,16 @@ export const exportToExcelFormat = (
   if (tickets.length === 0) return;
   const flatSheetData = tickets.map((t, index) => ({
     "R.No.": t.receiptNumber || index + 1,
-    "Date & Time": new Date(t.createdAt).toLocaleString("en-IN"),
+    Date: new Date(t.businessDate).toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    }),
+    Time: new Date(t.createdAt).toLocaleTimeString("en-IN", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    }),
     Name: t.customer.name,
     "Vehicle No.": t.vehicleNumber.toUpperCase(),
     Site: t.site,
@@ -30,7 +39,8 @@ export const exportToExcelFormat = (
   const workbook = XLSX.utils.book_new();
   worksheet["!cols"] = [
     { wch: 8 }, //receipt
-    { wch: 22 }, //date
+    { wch: 11 }, //date
+    { wch: 11 }, //time
     { wch: 20 }, //name
     { wch: 14 }, //vehicle
     { wch: 20 }, //site
@@ -57,6 +67,6 @@ export const exportToExcelFormat = (
 
   XLSX.writeFile(
     workbook,
-    `Mandar_Crusher_Ledger${searchLabel}_${fileStartLabel}_to_${fileEndLabel}.xlsx`,
+    `Sales_Ledger${searchLabel}_${fileStartLabel}_to_${fileEndLabel}.xlsx`,
   );
 };

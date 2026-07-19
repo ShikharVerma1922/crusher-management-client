@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
 import * as XLSX from "xlsx";
-import { exportToExcelFormat } from "../utils/excel.js";
+import { exportToExcelFormat } from "../utils/paymentsExcel.js";
 import {
   Calendar,
   Download,
@@ -13,19 +13,17 @@ import {
   SlidersHorizontal,
   Loader2,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
 import { ledgerStyles } from "../styles/ledgerStyles.js";
 
 export default function LedgerScreen() {
   const { adminApi } = useContext(AdminContext);
+  const navigate = useNavigate();
 
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-
-  const [totalQuantity, setTotalQuantity] = useState(0);
-  const [totalCash, setTotalCash] = useState(0);
-  const [totalCredit, setTotalCredit] = useState(0);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -33,9 +31,6 @@ export default function LedgerScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
-
-  const [editingTicketId, setEditingTicketId] = useState(null);
-  const [editingAmount, setEditingAmount] = useState("");
 
   const [exporting, setExporting] = useState(false);
   const [selectedReceiptId, setSelectedReceiptId] = useState(null);
@@ -173,18 +168,15 @@ export default function LedgerScreen() {
         );
 
         const response = await adminApi.get(
-          `/transactions?${queryParams.toString()}`,
+          `/payments?${queryParams.toString()}`,
         );
         const backendPayload = response.data?.data;
 
-        if (backendPayload && backendPayload.transactions) {
-          setTickets(backendPayload.transactions);
+        if (backendPayload && backendPayload.payments) {
+          setTickets(backendPayload.payments);
           if (backendPayload.meta) {
             setTotalPages(backendPayload.meta.totalPages || 1);
             setCurrentPage(backendPayload.meta.currentPage || pageTarget);
-            setTotalQuantity(backendPayload.meta.totalQuantity || 0);
-            setTotalCash(backendPayload.meta.totalCash || 0);
-            setTotalCredit(backendPayload.meta.totalCredit || 0);
           }
         } else {
           setTickets([]);
@@ -208,31 +200,6 @@ export default function LedgerScreen() {
     fetchLedgerData(1);
   }, [debouncedSearchQuery, startDate, endDate]);
 
-  async function handleEditCreditAmount(ticketId, materialQuantity) {
-    try {
-      const response = await adminApi.patch(
-        `/transactions/${ticketId}/credit-amount`,
-        {
-          amount: Number(editingAmount),
-          materialQuantity,
-        },
-      );
-      setTickets((prev) =>
-        prev.map((ticket) =>
-          ticket.id === ticketId
-            ? {
-                ...ticket,
-                totalAmount: response.data.data.totalAmount,
-                rateApplied: response.data.data.rateApplied,
-              }
-            : ticket,
-        ),
-      );
-    } finally {
-      setEditingTicketId(null);
-    }
-  }
-
   const handleExport = async () => {
     try {
       setExporting(true);
@@ -244,7 +211,7 @@ export default function LedgerScreen() {
       end.setDate(end.getDate() + 1);
       end.setHours(8, 59, 59, 999);
 
-      const response = await adminApi.get("/transactions/export", {
+      const response = await adminApi.get("/payments/export", {
         params: {
           search: searchQuery.trim(),
           startDate: start.toISOString(),
@@ -301,7 +268,7 @@ export default function LedgerScreen() {
             <Search size={16} style={ledgerStyles.searchIcon} />
             <input
               type="text"
-              placeholder="Search vehicle number, customer name..."
+              placeholder="Search receipt no., customer name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={ledgerStyles.searchInput}
@@ -383,59 +350,46 @@ export default function LedgerScreen() {
             ) : (
               <table
                 className="ledger-table"
-                style={ledgerStyles.masterTableElement}
+                style={{
+                  ...ledgerStyles.masterTableElement,
+                  tableLayout: "fixed",
+                }}
               >
                 <thead style={ledgerStyles.stickyTableHeader}>
                   <tr>
-                    <th width="30" style={ledgerStyles.thElement}>
+                    <th width="50" style={ledgerStyles.thElement}>
                       R.No.
                     </th>
 
-                    <th width="60" style={ledgerStyles.thElement}>
+                    <th minwidth="70" width="80" style={ledgerStyles.thElement}>
                       Date/Time
                     </th>
-                    <th minWidth="100" style={ledgerStyles.thElement}>
+                    <th width="100" style={ledgerStyles.thElement}>
                       Customer
                     </th>
-                    <th width="60" style={ledgerStyles.thElement}>
-                      V.No.
+                    <th width="100" style={ledgerStyles.thElement}>
+                      Payment Mode
                     </th>
-                    <th minWidth="80" style={ledgerStyles.thElement}>
-                      Site
+                    <th
+                      minwidth="180"
+                      width="180"
+                      style={ledgerStyles.thElement}
+                    >
+                      Ref.No.
                     </th>
-                    <th width="35" style={ledgerStyles.thElement}>
-                      Mat
-                    </th>
-
-                    <th width="30" style={ledgerStyles.thElement}>
-                      M.Qty
-                    </th>
-                    <th width="40" style={ledgerStyles.thElement}>
-                      M.Rate
-                    </th>
-                    <th width="50" style={ledgerStyles.thElement}>
-                      M.Amt
-                    </th>
-                    <th width="30" style={ledgerStyles.thElement}>
-                      R.Qty
-                    </th>
-                    <th width="40" style={ledgerStyles.thElement}>
-                      R.Rate
-                    </th>
-                    <th width="50" style={ledgerStyles.thElement}>
-                      R.Amt
-                    </th>
-                    <th width="40" style={ledgerStyles.thElement}>
-                      P.Mode
+                    <th
+                      width="220"
+                      style={{
+                        ...ledgerStyles.thElement,
+                        width: "220px",
+                        minwidth: "220px",
+                        maxWidth: "220px",
+                      }}
+                    >
+                      Remark
                     </th>
                     <th width="60" style={ledgerStyles.thElement}>
-                      G.Total
-                    </th>
-                    <th width="40" style={ledgerStyles.thElement}>
-                      A.Paid
-                    </th>
-                    <th width="60" style={ledgerStyles.thElement}>
-                      Balance
+                      Amount
                     </th>
                   </tr>
                 </thead>
@@ -476,7 +430,7 @@ export default function LedgerScreen() {
                           }}
                         >
                           <span style={{ fontWeight: 600, color: "#334155" }}>
-                            {new Date(ticket.createdAt).toLocaleDateString(
+                            {new Date(ticket.businessDate).toLocaleDateString(
                               "en-GB",
                               {
                                 day: "2-digit",
@@ -492,7 +446,7 @@ export default function LedgerScreen() {
                               marginTop: "2px",
                             }}
                           >
-                            {new Date(ticket.createdAt).toLocaleTimeString(
+                            {new Date(ticket.paymentDate).toLocaleTimeString(
                               "en-IN",
                               {
                                 hour: "2-digit",
@@ -503,26 +457,47 @@ export default function LedgerScreen() {
                           </span>
                         </div>
                       </td>
-                      <td style={ledgerStyles.tdElement}>
+                      <td
+                        style={{
+                          ...ledgerStyles.tdElement,
+                          cursor: "pointer",
+                          color: "#2563eb",
+                        }}
+                        onClick={() =>
+                          navigate(`/customers/${ticket.customerId}`)
+                        }
+                      >
                         {ticket.customer.name}
                       </td>
                       <td style={ledgerStyles.tdElement}>
-                        {ticket.vehicleNumber.toUpperCase()}
+                        {ticket.paymentMode.toUpperCase()}
                       </td>
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.site?.toLocaleString() || ""}
+                      <td
+                        style={{
+                          ...ledgerStyles.tdElement,
+                          width: "180px",
+                          minwidth: "180px",
+                          maxWidth: "180px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {ticket.referenceNo || ""}
                       </td>
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.material?.name || "Standard aggregate"}
-                      </td>
-
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.materialQuantity.toLocaleString()}
-                      </td>
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.materialRate}
+                      <td
+                        style={{
+                          ...ledgerStyles.tdElement,
+                          width: "220px",
+                          minwidth: "220px",
+                          maxWidth: "220px",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                        title={ticket.remarks || ""}
+                      >
+                        {ticket.remarks || ""}
                       </td>
                       <td
                         style={{
@@ -530,71 +505,7 @@ export default function LedgerScreen() {
                           textAlign: "right",
                         }}
                       >
-                        {ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.materialAmount.toLocaleString("en-IN")}
-                      </td>
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.royaltyQuantity === 0 &&
-                        ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.royaltyQuantity.toLocaleString()}
-                      </td>
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.royaltyRate === 0 && ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.royaltyRate}
-                      </td>
-                      <td
-                        style={{
-                          ...ledgerStyles.tdElement,
-                          textAlign: "right",
-                        }}
-                      >
-                        {ticket.royaltyAmount === 0
-                          ? "N/A"
-                          : ticket.royaltyAmount.toLocaleString("en-IN")}
-                      </td>
-                      <td style={ledgerStyles.tdElement}>
-                        {ticket.paymentMode.toLocaleString()}
-                      </td>
-                      <td
-                        style={{
-                          ...ledgerStyles.tdElement,
-                          textAlign: "right",
-                        }}
-                      >
-                        {ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.grandTotal.toLocaleString("en-IN")}
-                      </td>
-
-                      <td
-                        style={{
-                          ...ledgerStyles.tdElement,
-                          textAlign: "right",
-                        }}
-                      >
-                        {ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.amountPaid.toLocaleString("en-IN")}
-                      </td>
-                      <td
-                        style={{
-                          ...ledgerStyles.tdElement,
-                          color:
-                            ticket.materialRate === 0
-                              ? "gray"
-                              : ticket.balance > 0
-                                ? "#dc2626"
-                                : "#16a34a",
-                          fontWeight: 700,
-                          textAlign: "right",
-                        }}
-                      >
-                        {ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.balance.toLocaleString("en-IN")}
+                        {ticket.amountPaid.toLocaleString("en-IN")}
                       </td>
                     </tr>
                   ))}
@@ -644,257 +555,3 @@ export default function LedgerScreen() {
     </div>
   );
 }
-
-// const ledgerStyles = {
-//   viewViewportContainer: {
-//     display: "flex",
-//     flexDirection: "column",
-//     position: "relative",
-//     height: "100%",
-//     top: 0,
-//     bottom: 0,
-//     left: 0,
-//     right: 0,
-//     backgroundColor: "#f1f5f9", // Crisp light-grey ERP backdrop
-//     overflow: "hidden",
-//     fontFamily: "JetBrains Mono, Fira Code, Monaco, Consolas, monospace",
-//   },
-//   staticHeaderBlock: {
-//     padding: "3px 0px",
-//     flexShrink: 0,
-//     width: "100%",
-//     boxSizing: "border-box",
-//     backgroundColor: "#1e293b",
-//     borderBottom: "2px solid #0f172a",
-//   },
-//   actionHeader: {
-//     display: "flex",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     gap: "12px",
-//     height: "44px",
-//   },
-//   pageTitle: {
-//     fontSize: "13px",
-//     fontWeight: "700",
-//     color: "#38bdf8",
-//     margin: 0,
-//     textTransform: "uppercase",
-//     letterSpacing: "0.5px",
-//   },
-//   pageSubtitle: {
-//     fontSize: "11px",
-//     color: "#94a3b8",
-//     marginTop: "0px",
-//     margin: 0,
-//   },
-//   filterControlPanel: {
-//     display: "flex",
-//     gap: "8px",
-//     backgroundColor: "#ffffff",
-//     marginTop: "0px",
-//     padding: "6px 12px",
-//     borderRadius: "0px",
-//     borderBottom: "1px solid #cbd5e1",
-//     alignItems: "center",
-//     flexWrap: "nowrap",
-//   },
-//   searchContainer: {
-//     display: "flex",
-//     alignItems: "center",
-//     backgroundColor: "#f8fafc",
-//     borderRadius: "0px",
-//     border: "1px solid #cbd5e1",
-//     padding: "0 8px",
-//     flex: 1,
-//     height: "28px",
-//   },
-//   searchIcon: { color: "#64748b", marginRight: "6px" },
-//   searchInput: {
-//     backgroundColor: "transparent",
-//     border: "none",
-//     outline: "none",
-//     width: "100%",
-//     padding: "4px 0",
-//     fontSize: "12px",
-//     color: "#1e293b",
-//     fontFamily: "inherit",
-//     fontWeight: "600",
-//   },
-//   exportButton: {
-//     backgroundColor: "#16a34a",
-//     color: "#ffffff",
-//     height: "28px",
-//     padding: "0 12px",
-//     borderRadius: "0px",
-//     border: "1px solid #15803d",
-//     cursor: "pointer",
-//     display: "flex",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     fontSize: "11px",
-//     fontWeight: "700",
-//     textTransform: "uppercase",
-//   },
-//   errorAlertCard: {
-//     display: "flex",
-//     alignItems: "center",
-//     backgroundColor: "#fef2f2",
-//     borderLeft: "4px solid #dc2626",
-//     borderTop: "1px solid #fee2e2",
-//     borderRight: "1px solid #fee2e2",
-//     borderBottom: "1px solid #fee2e2",
-//     color: "#991b1b",
-//     padding: "6px 12px",
-//     borderRadius: "0px",
-//     marginTop: "4px",
-//     fontSize: "11px",
-//     fontWeight: "600",
-//   },
-//   dynamicScrollBodyWrapper: {
-//     flex: 1,
-//     padding: "8px 12px 12px 12px",
-//     overflow: "hidden",
-//     display: "flex",
-//     flexDirection: "column",
-//     boxSizing: "border-box",
-//   },
-//   tableCardContainer: {
-//     backgroundColor: "#ffffff",
-//     borderRadius: "0px",
-//     border: "1px solid #cbd5e1",
-//     display: "flex",
-//     flexDirection: "column",
-//     flex: 1,
-//     overflow: "hidden",
-//     width: "100%",
-//     boxSizing: "border-box",
-//   },
-//   overflowTableScroller: {
-//     flex: 1,
-//     overflowY: "auto",
-//     overflowX: "auto",
-//     width: "100%",
-//     position: "relative",
-//     backgroundColor: "#ffffff",
-//   },
-//   masterTableElement: {
-//     width: "100%",
-//     borderCollapse: "collapse",
-//     textAlign: "left",
-//     fontSize: "12px",
-//   },
-//   stickyTableHeader: {
-//     position: "sticky",
-//     top: 0,
-//     backgroundColor: "#f8fafc",
-//     zIndex: 10,
-//   },
-//   thElement: {
-//     padding: "8px 10px",
-//     color: "#475569",
-//     fontWeight: "700",
-//     textTransform: "uppercase",
-//     fontSize: "11px",
-//     letterSpacing: "0.2px",
-//     backgroundColor: "#f1f5f9",
-//     borderBottom: "2px solid #cbd5e1",
-//     borderRight: "1px solid #cbd5e1", // Visible grid borders like an Excel/Tally ledger matrix
-//   },
-//   tableBodyRowElement: {
-//     borderBottom: "1px solid #e2e8f0",
-//   },
-//   selectedTableRow: {
-//     backgroundColor: "#9fc5f6",
-//   },
-//   tdElement: {
-//     padding: "6px 10px",
-//     color: "#1e293b",
-//     whiteSpace: "nowrap",
-//     fontWeight: "600",
-//     borderRight: "1px solid #e2e8f0",
-//     borderBottom: "1px solid #e2e8f0",
-//   },
-//   badgeApproved: {
-//     backgroundColor: "#f0fdf4",
-//     color: "#166534",
-//     padding: "0px 4px",
-//     border: "1px solid #bbf7d0",
-//     borderRadius: "0px",
-//     fontSize: "10px",
-//     fontWeight: "700",
-//   },
-//   badgeVoid: {
-//     backgroundColor: "#fef2f2",
-//     color: "#991b1b",
-//     padding: "0px 4px",
-//     border: "1px solid #fecaca",
-//     borderRadius: "0px",
-//     fontSize: "10px",
-//     fontWeight: "700",
-//   },
-//   paginationRow: {
-//     display: "flex",
-//     justifyContent: "space-between",
-//     alignItems: "center",
-//     padding: "6px 12px",
-//     backgroundColor: "#f1f5f9",
-//     borderTop: "2px solid #cbd5e1",
-//     flexShrink: 0,
-//     height: "36px",
-//   },
-//   paginationText: {
-//     fontSize: "11px",
-//     color: "#475569",
-//     fontWeight: "700",
-//   },
-//   paginationButtonPair: { display: "flex", gap: "4px" },
-//   pagBtnActive: {
-//     backgroundColor: "#ffffff",
-//     border: "1px solid #cbd5e1",
-//     color: "#1e293b",
-//     padding: "3px 10px",
-//     borderRadius: "0px",
-//     fontWeight: "700",
-//     fontSize: "11px",
-//     cursor: "pointer",
-//   },
-//   pagBtnDisabled: {
-//     backgroundColor: "#e2e8f0",
-//     border: "1px solid #cbd5e1",
-//     color: "#94a3b8",
-//     padding: "3px 10px",
-//     borderRadius: "0px",
-//     fontSize: "11px",
-//     cursor: "not-allowed",
-//   },
-//   loadingWrapperGrid: {
-//     display: "flex",
-//     flexDirection: "column",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     minHeight: "200px",
-//     width: "100%",
-//     backgroundColor: "#ffffff",
-//     fontSize: "12px",
-//     fontWeight: "700",
-//     color: "#64748b",
-//   },
-//   emptyStateBlock: {
-//     display: "flex",
-//     alignItems: "center",
-//     justifyContent: "center",
-//     minHeight: "200px",
-//     width: "100%",
-//     backgroundColor: "#ffffff",
-//     fontSize: "12px",
-//     fontWeight: "700",
-//     color: "#94a3b8",
-//   },
-//   exportButtonDisabled: {
-//     backgroundColor: "#cbd5e1",
-//     borderColor: "#94a3b8",
-//     color: "#94a3b8",
-//     cursor: "not-allowed",
-//   },
-// };
