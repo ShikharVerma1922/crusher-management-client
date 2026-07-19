@@ -361,7 +361,7 @@ export default function LedgerScreen() {
                       R.No.
                     </th>
 
-                    <th minWidth="70" width="80" style={ledgerStyles.thElement}>
+                    <th minwidth="70" width="80" style={ledgerStyles.thElement}>
                       Date/Time
                     </th>
                     <th width="100" style={ledgerStyles.thElement}>
@@ -371,7 +371,7 @@ export default function LedgerScreen() {
                       Payment Mode
                     </th>
                     <th
-                      minWidth="180"
+                      minwidth="180"
                       width="180"
                       style={ledgerStyles.thElement}
                     >
@@ -382,7 +382,7 @@ export default function LedgerScreen() {
                       style={{
                         ...ledgerStyles.thElement,
                         width: "220px",
-                        minWidth: "220px",
+                        minwidth: "220px",
                         maxWidth: "220px",
                       }}
                     >
@@ -430,7 +430,7 @@ export default function LedgerScreen() {
                           }}
                         >
                           <span style={{ fontWeight: 600, color: "#334155" }}>
-                            {new Date(ticket.createdAt).toLocaleDateString(
+                            {new Date(ticket.businessDate).toLocaleDateString(
                               "en-GB",
                               {
                                 day: "2-digit",
@@ -446,7 +446,7 @@ export default function LedgerScreen() {
                               marginTop: "2px",
                             }}
                           >
-                            {new Date(ticket.createdAt).toLocaleTimeString(
+                            {new Date(ticket.paymentDate).toLocaleTimeString(
                               "en-IN",
                               {
                                 hour: "2-digit",
@@ -476,7 +476,7 @@ export default function LedgerScreen() {
                         style={{
                           ...ledgerStyles.tdElement,
                           width: "180px",
-                          minWidth: "180px",
+                          minwidth: "180px",
                           maxWidth: "180px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",
@@ -489,7 +489,7 @@ export default function LedgerScreen() {
                         style={{
                           ...ledgerStyles.tdElement,
                           width: "220px",
-                          minWidth: "220px",
+                          minwidth: "220px",
                           maxWidth: "220px",
                           whiteSpace: "nowrap",
                           overflow: "hidden",

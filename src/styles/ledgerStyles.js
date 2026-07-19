@@ -248,7 +248,7 @@ export const ledgerStyles = {
   },
   exportButtonDisabled: {
     backgroundColor: "#cbd5e1",
-    borderColor: "#94a3b8",
+    border: "1px solid #94a3b8",
     color: "#94a3b8",
     cursor: "not-allowed",
   },

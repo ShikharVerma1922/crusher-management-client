@@ -23,6 +23,7 @@ import {
   Settings,
   UsersRound,
   IndianRupee,
+  BadgeIndianRupee,
 } from "lucide-react";
 import Setting from "./screens/Setting.jsx";
 import {
@@ -32,6 +33,7 @@ import {
   useLocation,
   Navigate,
 } from "react-router-dom";
+import PendingSettlementPanel from "./screens/PendingSettlementScreen.jsx";
 
 export default function App() {
   const { isAdminAuthenticated, globalLoading, adminLogout, currentAdmin } =
@@ -41,61 +43,7 @@ export default function App() {
 
   const currentTab = location.pathname.split("/")[1];
 
-  // const getInitialRouteFromUrlHash = () => {
-  //   const activeHashString = window.location.hash.replace("#", "");
-  //   const verifiedValidRoutes = [
-  //     "dashboard",
-  //     "sales",
-  //     "customers",
-  //     "materials",
-  //     "clerks",
-  //     "trends",
-  //     "voids",
-  //     "settings",
-  //   ];
-  //   return verifiedValidRoutes.includes(activeHashString)
-  //     ? activeHashString
-  //     : "dashboard";
-  // };
-
-  // const [currentTab, setCurrentTab] = useState(getInitialRouteFromUrlHash);
-
-  // Track hovered button indexes to trigger isolated floating tooltips
   const [hoveredTab, setHoveredTab] = useState(null);
-
-  // const [liveTime, setLiveTime] = useState(
-  //   new Date().toLocaleTimeString("en-IN", {
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //     second: "2-digit",
-  //   }),
-  // );
-
-  // useEffect(() => {
-  //   const timer = setInterval(() => {
-  //     setLiveTime(
-  //       new Date().toLocaleTimeString("en-IN", {
-  //         hour: "2-digit",
-  //         minute: "2-digit",
-  //         second: "2-digit",
-  //       }),
-  //     );
-  //   }, 1000);
-  //   return () => clearInterval(timer);
-  // }, []);
-
-  // useEffect(() => {
-  //   window.location.hash = currentTab;
-  // }, [currentTab]);
-
-  // useEffect(() => {
-  //   const handleUrlHashFallbackEvent = () => {
-  //     setCurrentTab(getInitialRouteFromUrlHash());
-  //   };
-  //   window.addEventListener("hashchange", handleUrlHashFallbackEvent);
-  //   return () =>
-  //     window.removeEventListener("hashchange", handleUrlHashFallbackEvent);
-  // }, []);
 
   if (globalLoading) {
     return (
@@ -141,7 +89,7 @@ export default function App() {
           <div style={styles.brandText}>
             <h1 style={styles.brandTitle}>Mandar Crusher</h1>
             <span style={styles.brandSubtitle}>
-              Management System{" "}
+              ERP System{" "}
               <span style={{ color: "#38bdf8", fontWeight: "bold" }}>/</span>{" "}
               {currentTab.toUpperCase()}
             </span>
@@ -246,7 +194,49 @@ export default function App() {
               <UsersRound size={18} style={{ flexShrink: 0 }} />
             </button>
             {hoveredTab === "customers" && (
-              <div style={styles.floatingTooltip}>Customer Ledger</div>
+              <div style={styles.floatingTooltip}>Customer Register</div>
+            )}
+          </div>
+
+          {/* Pending Settlement Tab */}
+          <div
+            style={styles.navItemContainer}
+            onMouseEnter={() => setHoveredTab("settlements")}
+            onMouseLeave={() => setHoveredTab(null)}
+          >
+            <button
+              onClick={() => navigate("/settlements")}
+              style={
+                currentTab === "settlements"
+                  ? styles.sideTabButtonActive
+                  : styles.sideTabButton
+              }
+            >
+              <BadgeIndianRupee size={18} style={{ flexShrink: 0 }} />
+            </button>
+            {hoveredTab === "settlements" && (
+              <div style={styles.floatingTooltip}>Pending Settlements</div>
+            )}
+          </div>
+
+          {/* Void Clearances Tab */}
+          <div
+            style={styles.navItemContainer}
+            onMouseEnter={() => setHoveredTab("voids")}
+            onMouseLeave={() => setHoveredTab(null)}
+          >
+            <button
+              onClick={() => navigate("/voids")}
+              style={
+                currentTab === "voids"
+                  ? styles.sideTabButtonActive
+                  : styles.sideTabButton
+              }
+            >
+              <ShieldAlert size={18} style={{ flexShrink: 0 }} />
+            </button>
+            {hoveredTab === "voids" && (
+              <div style={styles.floatingTooltip}>Void Clearances</div>
             )}
           </div>
 
@@ -271,26 +261,6 @@ export default function App() {
             )}
           </div>
 
-          {/* Void Clearances Tab */}
-          <div
-            style={styles.navItemContainer}
-            onMouseEnter={() => setHoveredTab("voids")}
-            onMouseLeave={() => setHoveredTab(null)}
-          >
-            <button
-              onClick={() => navigate("/voids")}
-              style={
-                currentTab === "voids"
-                  ? styles.sideTabButtonActive
-                  : styles.sideTabButton
-              }
-            >
-              <ShieldAlert size={18} style={{ flexShrink: 0 }} />
-            </button>
-            {hoveredTab === "voids" && (
-              <div style={styles.floatingTooltip}>Void Clearances</div>
-            )}
-          </div>
           {/* Settings page */}
           <div
             style={styles.navItemContainer}
@@ -324,7 +294,10 @@ export default function App() {
           <Route path="/payments" element={<PaymentsLedgerScreen />} />
 
           <Route path="/customers/:customerId?" element={<CustomerLedger />} />
-
+          <Route
+            path="/settlements/:transactionId?"
+            element={<PendingSettlementPanel />}
+          />
           <Route path="/trends" element={<AnalyticsExplorerScreen />} />
           <Route path="/materials" element={<MaterialScreen />} />
           <Route path="/clerks" element={<ClerkScreen />} />

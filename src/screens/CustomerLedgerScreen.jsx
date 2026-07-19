@@ -1,23 +1,40 @@
 import React, { useState, useEffect, useCallback, act } from "react";
 import { adminApi } from "../lib/axiosApi";
 import DateRangeFilter from "../components/DateRangeFilter";
-import { Download, FileWarning, RefreshCw, TriangleAlert } from "lucide-react";
+import {
+  Download,
+  FileWarning,
+  Loader2,
+  Pen,
+  Pencil,
+  RefreshCw,
+  TriangleAlert,
+} from "lucide-react";
 import { useParams, useNavigate } from "react-router-dom";
 import { exportToExcelFormat } from "../utils/customerExcel";
 import { ledgerStyles } from "../styles/ledgerStyles";
+import { calculateBusinessDate } from "../utils/businessDateCalculator";
+import CustomerEditModal from "../components/CustomerEditModal";
 
 export default function CustomerLedger() {
   // --- UI Layout & Interaction States ---
 
   const navigate = useNavigate();
   const { customerId } = useParams();
-  // const [activeCustomer, setActiveCustomer] = useState({});
+  const now = new Date();
+
+  const localDateTime = new Date(
+    now.getTime() - now.getTimezoneOffset() * 60000,
+  )
+    .toISOString()
+    .slice(0, 16);
   const [formData, setFormData] = useState({
-    amountPaid: "", // Controlled input for numerical value
-    paymentMode: "BANK_TRANSFER", // Matches backend schema options: CASH, BANK_TRANSFER, UPI, CHEQUE
-    referenceNo: "", // Optional/Required string dependent on mode
-    remarks: "", // Audit trail text string details
-    receivedById: null, // Optional String parameter matching your User relation ID
+    amountPaid: "",
+    paymentMode: "BANK_TRANSFER",
+    referenceNo: "",
+    remarks: "",
+    receivedById: null,
+    paymentDate: localDateTime,
   });
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -38,7 +55,31 @@ export default function CustomerLedger() {
   const [isLedgerLoading, setIsLedgerLoading] = useState(false);
   const [ledgerError, setLedgerError] = useState(null);
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const activeCustomer = customers.find((c) => c.id === customerId);
+
+  const handleOpenEditModal = (id) => {
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const handleRefreshCustomerRowData = (updatedCustomer) => {
+    setCustomers((prev) =>
+      prev.map((c) =>
+        c.id === updatedCustomer.id
+          ? {
+              ...c,
+              name: updatedCustomer.name,
+              outstandingBalance: updatedCustomer.outstandingBalance,
+            }
+          : c,
+      ),
+    );
+  };
 
   // 🗓️ 1. TIME-SERIES BOUNDARY INITIALIZATION CONTEXT
   // Returns a raw "YYYY-MM-DD" string mapping to local calendar states cleanly
@@ -218,6 +259,7 @@ export default function CustomerLedger() {
     }
 
     setIsSubmitting(true);
+    const businessDate = calculateBusinessDate(formData.paymentDate);
 
     try {
       // 🔌 API ENDPOINT LOCATION FOR PAYMENT SUBMISSION
@@ -227,6 +269,8 @@ export default function CustomerLedger() {
         paymentMode: formData.paymentMode,
         referenceNo: formData.referenceNo,
         remarks: formData.remarks,
+        paymentDate: formData.paymentDate,
+        businessDate,
       });
 
       if (response.status !== 201) {
@@ -258,6 +302,7 @@ export default function CustomerLedger() {
         paymentMode: "BANK_TRANSFER",
         referenceNo: "",
         remarks: "",
+        paymentDate: localDateTime,
       });
       setIsDrawerOpen(false);
     } catch (error) {
@@ -478,16 +523,14 @@ export default function CustomerLedger() {
           {/* LEDGER WORKSPACE HEADER STRIP */}
           {activeCustomer && (
             <div style={styles.ledgerHeaderStrip}>
-              <div>
-                <span
-                  style={{
-                    fontSize: "11px",
-                    color: "#64748b",
-                    fontWeight: "700",
-                  }}
-                >
-                  CUSTOMER LEDGER:
-                </span>
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "baseline",
+                  gap: 15,
+                }}
+              >
                 <h2
                   style={{
                     fontSize: "15px",
@@ -498,6 +541,12 @@ export default function CustomerLedger() {
                 >
                   {activeCustomer.name}
                 </h2>
+
+                <Pencil
+                  size={14}
+                  onClick={() => handleOpenEditModal()}
+                  style={{ cursor: "pointer" }}
+                />
               </div>
               <button
                 onClick={() => setIsDrawerOpen(true)}
@@ -511,9 +560,19 @@ export default function CustomerLedger() {
           <div style={styles.tableCardContainer}>
             {/* LOADING MASK COVER OVERLAY */}
             {isLedgerLoading ? (
-              <div style={styles.loadingWrapperGrid}>
-                <div style={styles.spinnerElement}></div>
-                <span>COMPUTING SYSTEM BALANCE SHEETS...</span>
+              <div style={ledgerStyles.loadingWrapperGrid}>
+                <Loader2
+                  size={24}
+                  style={{
+                    animation: "spin 1s linear infinite",
+                    color: "#2563eb",
+                  }}
+                />
+                <p
+                  style={{ marginTop: 12, color: "#64748b", fontSize: "13px" }}
+                >
+                  COMPUTING SYSTEM BALANCE SHEETS...
+                </p>
               </div>
             ) : ledgerError ? (
               <div style={styles.errorAlertCard}>
@@ -528,7 +587,7 @@ export default function CustomerLedger() {
                         style={{
                           ...styles.thElement,
                           width: "100px",
-                          minWidth: "60px",
+                          minwidth: "60px",
                         }}
                       >
                         Date
@@ -537,7 +596,7 @@ export default function CustomerLedger() {
                         style={{
                           ...styles.thElement,
                           width: "110px",
-                          minWidth: "50px",
+                          minwidth: "50px",
                         }}
                       >
                         Ref
@@ -844,6 +903,33 @@ export default function CustomerLedger() {
               </div>
               <hr style={styles.drawerDivider} />
 
+              <div style={styles.formInputStackUnit}>
+                <label style={styles.formLabelElement}>
+                  Payment Date & Time
+                </label>
+                <div style={{ position: "relative" }}>
+                  <input
+                    type="datetime-local"
+                    value={formData.paymentDate}
+                    onChange={(e) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        paymentDate: e.target.value,
+                      }))
+                    }
+                    style={{
+                      ...styles.formTextInputField,
+                    }}
+                  />
+                  <style>{`
+                    input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+                      filter: invert(32%) sepia(89%) saturate(1800%) hue-rotate(210deg) brightness(95%) contrast(95%);
+                      cursor: pointer;
+                    }
+                  `}</style>
+                </div>
+              </div>
+
               {/* 1. Input: Amount */}
               <div style={styles.formInputStackUnit}>
                 <label style={styles.formLabelElement}>
@@ -885,9 +971,7 @@ export default function CustomerLedger() {
                   }
                   style={styles.formDropdownSelectField}
                 >
-                  <option value="BANK_TRANSFER">
-                    BANK TRANSFER (IMPS/NEFT/RTGS)
-                  </option>
+                  <option value="BANK_TRANSFER">BANK TRANSFER</option>
                   <option value="UPI">UPI LINK / QR</option>
                   <option value="CASH">CASH VOUCHER</option>
                   <option value="CHEQUE">BANK CHEQUE</option>
@@ -961,6 +1045,12 @@ export default function CustomerLedger() {
           </div>
         </div>
       </div>
+      <CustomerEditModal
+        isOpen={isModalOpen}
+        customerId={customerId}
+        onClose={handleCloseModal}
+        onUpdateSuccess={handleRefreshCustomerRowData}
+      />
     </div>
   );
 }
@@ -1323,6 +1413,7 @@ const styles = {
   formInputStackUnit: {
     display: "flex",
     flexDirection: "column",
+    backgroundColor: "#ffffff",
     gap: "4px",
   },
   formLabelElement: {

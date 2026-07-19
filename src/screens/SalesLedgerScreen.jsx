@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useContext, useCallback } from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
 import * as XLSX from "xlsx";
-import { exportToExcelFormat } from "../utils/excel.js";
+import { exportToExcelFormat } from "../utils/salesExcel.js";
 import {
   Calendar,
   Download,
@@ -12,6 +12,7 @@ import {
   AlertCircle,
   SlidersHorizontal,
   Loader2,
+  TriangleAlert,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
@@ -303,7 +304,7 @@ export default function LedgerScreen() {
             <Search size={16} style={ledgerStyles.searchIcon} />
             <input
               type="text"
-              placeholder="Search vehicle number, customer name..."
+              placeholder="Search vehicle number, receipt number, customer name..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={ledgerStyles.searchInput}
@@ -396,13 +397,13 @@ export default function LedgerScreen() {
                     <th width="60" style={ledgerStyles.thElement}>
                       Date/Time
                     </th>
-                    <th minWidth="100" style={ledgerStyles.thElement}>
+                    <th minwidth="100" style={ledgerStyles.thElement}>
                       Customer
                     </th>
                     <th width="60" style={ledgerStyles.thElement}>
                       V.No.
                     </th>
-                    <th minWidth="80" style={ledgerStyles.thElement}>
+                    <th minwidth="80" style={ledgerStyles.thElement}>
                       Site
                     </th>
                     <th width="35" style={ledgerStyles.thElement}>
@@ -455,15 +456,22 @@ export default function LedgerScreen() {
                         style={{
                           ...ledgerStyles.tdElement,
                           fontWeight: "800",
-                          color: "#0f172a",
-                          cursor: "pointer",
+                          color:
+                            ticket?.rateStatus === "OPEN"
+                              ? "#f3ab04"
+                              : "#0f172a",
+                          cursor:
+                            ticket?.rateStatus === "OPEN"
+                              ? "pointer"
+                              : "default",
                           userSelect: "none",
                         }}
-                        onClick={() =>
-                          setSelectedReceiptId((prev) =>
-                            prev === ticket.id ? null : ticket.id,
-                          )
-                        }
+                        onClick={() => {
+                          ticket?.rateStatus === "OPEN" &&
+                            navigate(
+                              `/settlements?search=${ticket.receiptNumber}`,
+                            );
+                        }}
                       >
                         {ticket.receiptNumber}
                       </td>
@@ -476,9 +484,14 @@ export default function LedgerScreen() {
                             flexDirection: "column",
                             lineHeight: 1.2,
                           }}
+                          onClick={() =>
+                            setSelectedReceiptId((prev) =>
+                              prev === ticket.id ? null : ticket.id,
+                            )
+                          }
                         >
                           <span style={{ fontWeight: 600, color: "#334155" }}>
-                            {new Date(ticket.createdAt).toLocaleDateString(
+                            {new Date(ticket.businessDate).toLocaleDateString(
                               "en-GB",
                               {
                                 day: "2-digit",
@@ -531,9 +544,7 @@ export default function LedgerScreen() {
                         {ticket.materialQuantity.toLocaleString()}
                       </td>
                       <td style={ledgerStyles.tdElement}>
-                        {ticket.materialRate === 0
-                          ? "N/A"
-                          : ticket.materialRate}
+                        {ticket.materialRate === 0 ? "--" : ticket.materialRate}
                       </td>
                       <td
                         style={{
@@ -542,18 +553,18 @@ export default function LedgerScreen() {
                         }}
                       >
                         {ticket.materialRate === 0
-                          ? "N/A"
+                          ? "--"
                           : ticket.materialAmount.toLocaleString("en-IN")}
                       </td>
                       <td style={ledgerStyles.tdElement}>
                         {ticket.royaltyQuantity === 0 &&
                         ticket.materialRate === 0
-                          ? "N/A"
+                          ? "--"
                           : ticket.royaltyQuantity.toLocaleString()}
                       </td>
                       <td style={ledgerStyles.tdElement}>
                         {ticket.royaltyRate === 0 && ticket.materialRate === 0
-                          ? "N/A"
+                          ? "--"
                           : ticket.royaltyRate}
                       </td>
                       <td
@@ -562,8 +573,8 @@ export default function LedgerScreen() {
                           textAlign: "right",
                         }}
                       >
-                        {ticket.royaltyAmount === 0
-                          ? "N/A"
+                        {ticket.royaltyAmount === 0 && ticket.materialRate === 0
+                          ? "--"
                           : ticket.royaltyAmount.toLocaleString("en-IN")}
                       </td>
                       <td style={ledgerStyles.tdElement}>
@@ -576,7 +587,7 @@ export default function LedgerScreen() {
                         }}
                       >
                         {ticket.materialRate === 0
-                          ? "N/A"
+                          ? "--"
                           : ticket.grandTotal.toLocaleString("en-IN")}
                       </td>
 
@@ -587,7 +598,7 @@ export default function LedgerScreen() {
                         }}
                       >
                         {ticket.materialRate === 0
-                          ? "N/A"
+                          ? "--"
                           : ticket.amountPaid.toLocaleString("en-IN")}
                       </td>
                       <td
@@ -604,7 +615,7 @@ export default function LedgerScreen() {
                         }}
                       >
                         {ticket.materialRate === 0
-                          ? "N/A"
+                          ? "--"
                           : ticket.balance.toLocaleString("en-IN")}
                       </td>
                     </tr>
