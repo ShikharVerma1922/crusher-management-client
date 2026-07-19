@@ -8,7 +8,7 @@ import MaterialScreen from "./screens/MaterialScreen.jsx";
 import ClerkScreen from "./screens/ClerkScreen.jsx";
 import AnalyticsExplorerScreen from "./screens/AnalyticsExplorerScreen.jsx";
 import VoidRequestsScreen from "./screens/VoidRequestScreen.jsx";
-import CustomerLedger from "./screens/customerLedgerScreen.jsx";
+import CustomerLedger from "./screens/CustomerLedgerScreen.jsx";
 import { AdminContext } from "./context/AdminContext.jsx";
 import {
   Loader2,
