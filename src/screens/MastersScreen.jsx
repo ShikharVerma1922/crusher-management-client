@@ -1,7 +1,7 @@
 import React, { act, useState } from "react";
 import MaterialTable from "../components/MaterialTable.jsx";
 import ClerkTable from "../components/ClerkTable.jsx";
-import { Loader2, ShieldAlert } from "lucide-react";
+import { BriefcaseBusiness, Loader2, Package, ShieldAlert } from "lucide-react";
 
 export default function Setting() {
   const [activeTab, setActiveTab] = useState("Material");
@@ -31,7 +31,7 @@ export default function Setting() {
                 : styles.tabButton
             }
           >
-            Material Catalogue
+            <Package size={14} /> <span>Material Catalogue</span>
           </button>
           <button
             onClick={() => setActiveTab("Clerk")}
@@ -45,7 +45,7 @@ export default function Setting() {
                 : styles.tabButton
             }
           >
-            Operator Access
+            <BriefcaseBusiness size={14} /> <span>Operator Access</span>
           </button>
         </div>
 
@@ -138,6 +138,8 @@ const styles = {
   tabBarWrapper: { display: "flex", gap: "20px" },
   tabButton: {
     background: "none",
+    display: "flex",
+    gap: 8,
     border: "none",
     padding: "8px 2px 10px 2px",
     fontSize: "12px",
@@ -147,6 +149,8 @@ const styles = {
     borderBottom: "3px solid transparent",
   },
   tabButtonActive: {
+    display: "flex",
+    gap: 8,
     background: "none",
     border: "none",
     padding: "8px 2px 10px 2px",

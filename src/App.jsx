@@ -24,8 +24,14 @@ import {
   UsersRound,
   IndianRupee,
   BadgeIndianRupee,
+  ReceiptIndianRupee,
+  BookText,
+  BookOpen,
+  HandCoins,
+  BriefcaseBusiness,
+  Database,
 } from "lucide-react";
-import Setting from "./screens/Setting.jsx";
+import Setting from "./screens/MastersScreen.jsx";
 import {
   useNavigate,
   Route,
@@ -132,7 +138,7 @@ export default function App() {
               <LayoutDashboard size={18} style={{ flexShrink: 0 }} />
             </button>
             {hoveredTab === "dashboard" && (
-              <div style={styles.floatingTooltip}>Executive Panel</div>
+              <div style={styles.floatingTooltip}>Dashboard</div>
             )}
           </div>
 
@@ -150,7 +156,7 @@ export default function App() {
                   : styles.sideTabButton
               }
             >
-              <FileSpreadsheet size={18} style={{ flexShrink: 0 }} />
+              <BookOpen size={18} style={{ flexShrink: 0 }} />
             </button>
             {hoveredTab === "sales" && (
               <div style={styles.floatingTooltip}>Sales Ledger</div>
@@ -171,7 +177,7 @@ export default function App() {
                   : styles.sideTabButton
               }
             >
-              <IndianRupee size={18} style={{ flexShrink: 0 }} />
+              <HandCoins size={18} style={{ flexShrink: 0 }} />
             </button>
             {hoveredTab === "payments" && (
               <div style={styles.floatingTooltip}>Payments Ledger</div>
@@ -264,21 +270,21 @@ export default function App() {
           {/* Settings page */}
           <div
             style={styles.navItemContainer}
-            onMouseEnter={() => setHoveredTab("settings")}
+            onMouseEnter={() => setHoveredTab("masters")}
             onMouseLeave={() => setHoveredTab(null)}
           >
             <button
-              onClick={() => navigate("/settings")}
+              onClick={() => navigate("/masters")}
               style={
-                currentTab === "settings"
+                currentTab === "masters"
                   ? styles.sideTabButtonActive
                   : styles.sideTabButton
               }
             >
-              <Settings size={18} style={{ flexShrink: 0 }} />
+              <Database size={18} style={{ flexShrink: 0 }} />
             </button>
-            {hoveredTab === "settings" && (
-              <div style={styles.floatingTooltip}>Settings</div>
+            {hoveredTab === "masters" && (
+              <div style={styles.floatingTooltip}>Masters</div>
             )}
           </div>
         </nav>
@@ -302,7 +308,7 @@ export default function App() {
           <Route path="/materials" element={<MaterialScreen />} />
           <Route path="/clerks" element={<ClerkScreen />} />
           <Route path="/voids" element={<VoidRequestsScreen />} />
-          <Route path="/settings" element={<Setting />} />
+          <Route path="/masters" element={<Setting />} />
         </Routes>
       </main>
     </div>

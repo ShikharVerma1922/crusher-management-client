@@ -455,10 +455,9 @@ export default function LedgerScreen() {
                       <td
                         style={{
                           ...ledgerStyles.tdElement,
-                          fontWeight: "800",
                           color:
                             ticket?.rateStatus === "OPEN"
-                              ? "#f3ab04"
+                              ? "#FF8C00"
                               : "#0f172a",
                           cursor:
                             ticket?.rateStatus === "OPEN"

@@ -528,7 +528,7 @@ export default function CustomerLedger() {
                   display: "flex",
                   flexDirection: "row",
                   alignItems: "baseline",
-                  gap: 15,
+                  gap: 10,
                 }}
               >
                 <h2
@@ -543,7 +543,7 @@ export default function CustomerLedger() {
                 </h2>
 
                 <Pencil
-                  size={14}
+                  size={13}
                   onClick={() => handleOpenEditModal()}
                   style={{ cursor: "pointer" }}
                 />
@@ -587,7 +587,7 @@ export default function CustomerLedger() {
                         style={{
                           ...styles.thElement,
                           width: "100px",
-                          minwidth: "60px",
+                          minwidth: "40px",
                         }}
                       >
                         Date
@@ -595,19 +595,25 @@ export default function CustomerLedger() {
                       <th
                         style={{
                           ...styles.thElement,
-                          width: "110px",
-                          minwidth: "50px",
+                          width: "60px",
+                          minwidth: "60px",
                         }}
                       >
                         Ref
                       </th>
-                      <th style={{ ...styles.thElement, width: "240px" }}>
+                      <th
+                        style={{
+                          ...styles.thElement,
+                          width: "240px",
+                          minwidth: "240px",
+                        }}
+                      >
                         Particulars
                       </th>
                       <th
                         style={{
                           ...styles.thElement,
-                          width: "120px",
+                          width: "80px",
                           textAlign: "right",
                         }}
                       >
@@ -616,7 +622,7 @@ export default function CustomerLedger() {
                       <th
                         style={{
                           ...styles.thElement,
-                          width: "120px",
+                          width: "80px",
                           textAlign: "right",
                         }}
                       >
@@ -625,7 +631,7 @@ export default function CustomerLedger() {
                       <th
                         style={{
                           ...styles.thElement,
-                          width: "140px",
+                          width: "100px",
                           textAlign: "right",
                           borderRight: "none",
                         }}
@@ -719,12 +725,34 @@ export default function CustomerLedger() {
 
                             {/* Reference / Voucher Code */}
                             <td
-                              style={{ ...styles.tdElement, fontWeight: "700" }}
+                              style={{
+                                ...styles.tdElement,
+                                fontWeight: "700",
+                                cursor:
+                                  item?.rateStatus === "OPEN"
+                                    ? "pointer"
+                                    : "default",
+                              }}
+                              onClick={() => {
+                                item?.rateStatus === "OPEN" &&
+                                  navigate(
+                                    `/settlements?search=${item.referenceNumber}`,
+                                  );
+                              }}
                             >
                               {item.type === "CREDIT" ? "PAY-" : "INV-"}
                               {item.referenceNumber}{" "}
                               {item?.rateStatus === "OPEN" && (
-                                <TriangleAlert size={10} color={"orange"} />
+                                <span title="Rate not settled">
+                                  <TriangleAlert
+                                    size={10}
+                                    color="orange"
+                                    style={{
+                                      marginLeft: 4,
+                                      verticalAlign: "middle",
+                                    }}
+                                  />
+                                </span>
                               )}
                             </td>
 
