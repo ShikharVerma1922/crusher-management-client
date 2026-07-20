@@ -44,7 +44,7 @@ export const exportToExcelFormat = (
     {
       Date: "",
       Ref: "",
-      Particulars: `Closing Balance C/F (As if ${new Date(
+      Particulars: `Closing Balance C/F (As of ${new Date(
         endDate,
       ).toLocaleDateString("en-IN", {
         day: "2-digit",

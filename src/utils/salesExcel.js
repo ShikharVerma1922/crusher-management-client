@@ -24,15 +24,15 @@ export const exportToExcelFormat = (
     Site: t.site,
     Mat: t.material?.name || "undefined",
     "M.Qty": t.materialQuantity,
-    "M.Rate": t.materialRate,
-    "M.Amt": t.materialAmount,
+    "M.Rate": t.rateStatus === "SETTLED" ? t.materialRate : "--",
+    "M.Amt": t.rateStatus === "SETTLED" ? t.materialAmount : "--",
     "R.Qty": t.royaltyQuantity,
     "R.Rate": t.royaltyRate,
     "R.Amt": t.royaltyAmount,
     "P.Mode": t.paymentMode,
-    "G.Total": t.grandTotal,
+    "G.Total": t.rateStatus === "SETTLED" ? t.grandTotal : "--",
     "A.Paid": t.amountPaid,
-    Balance: t.balance,
+    Balance: t.rateStatus === "SETTLED" ? t.balance : "--",
   }));
 
   const worksheet = XLSX.utils.json_to_sheet(flatSheetData);
