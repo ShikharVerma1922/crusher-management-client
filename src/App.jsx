@@ -40,6 +40,7 @@ import {
   Navigate,
 } from "react-router-dom";
 import PendingSettlementPanel from "./screens/PendingSettlementScreen.jsx";
+import NotFound from "./screens/NotFound.jsx";
 
 export default function App() {
   const { isAdminAuthenticated, globalLoading, adminLogout, currentAdmin } =
@@ -309,6 +310,7 @@ export default function App() {
           <Route path="/clerks" element={<ClerkScreen />} />
           <Route path="/voids" element={<VoidRequestsScreen />} />
           <Route path="/masters" element={<Setting />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
     </div>
