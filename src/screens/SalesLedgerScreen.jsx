@@ -14,6 +14,8 @@ import {
   Loader2,
   TriangleAlert,
   BadgeIndianRupee,
+  Package,
+  Wallet,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
@@ -37,6 +39,8 @@ export default function LedgerScreen() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(searchQuery);
+  const [materialFilter, setMaterialFilter] = useState("all");
+  const [paymentModeFilter, setPaymentModeFilter] = useState("both");
 
   const [editingTicketId, setEditingTicketId] = useState(null);
   const [editingAmount, setEditingAmount] = useState("");
@@ -172,6 +176,8 @@ export default function LedgerScreen() {
           }),
           startDate: absoluteStartDate,
           endDate: absoluteEndDate,
+          material: materialFilter,
+          paymentMode: paymentModeFilter,
         });
 
         console.log(
@@ -206,13 +212,28 @@ export default function LedgerScreen() {
         setLoading(false);
       }
     },
-    [adminApi, debouncedSearchQuery, startDate, endDate, limit, currentPage],
+    [
+      adminApi,
+      debouncedSearchQuery,
+      startDate,
+      endDate,
+      limit,
+      currentPage,
+      materialFilter,
+      paymentModeFilter,
+    ],
   );
 
   // Network listener reacts automatically to any changes in standard parameter values
   useEffect(() => {
     fetchLedgerData(1);
-  }, [debouncedSearchQuery, startDate, endDate]);
+  }, [
+    debouncedSearchQuery,
+    startDate,
+    endDate,
+    materialFilter,
+    paymentModeFilter,
+  ]);
 
   async function handleEditCreditAmount(ticketId, materialQuantity) {
     try {
@@ -305,6 +326,47 @@ export default function LedgerScreen() {
               onChange={(e) => setSearchQuery(e.target.value)}
               style={ledgerStyles.searchInput}
             />
+          </div>
+          <div style={styles.dropdownInputGroup}>
+            <Package size={14} style={{ color: "#64748b", marginRight: 6 }} />
+            <select
+              value={materialFilter}
+              onChange={(e) => setMaterialFilter(e.target.value)}
+              style={{
+                ...styles.selectDropdownElement,
+                borderColor: materialFilter !== "all" ? "#2563eb" : "#cbd5e1",
+                backgroundColor:
+                  materialFilter !== "all" ? "#eff6ff" : "#ffffff",
+              }}
+            >
+              <option value="10mm">10mm</option>
+              <option value="20mm">20mm</option>
+              <option value="6mm">6mm</option>
+              <option value="copra">Copra</option>
+              <option value="crm">CRM</option>
+              <option value="dust">Dust</option>
+              <option value="gsb">GSB</option>
+              <option value="mix">Mix</option>
+              <option value="all">All Material</option>
+            </select>
+          </div>
+          <div style={styles.dropdownInputGroup}>
+            <Wallet size={14} style={{ color: "#64748b", marginRight: 6 }} />
+            <select
+              value={paymentModeFilter}
+              onChange={(e) => setPaymentModeFilter(e.target.value)}
+              style={{
+                ...styles.selectDropdownElement,
+                borderColor:
+                  paymentModeFilter !== "both" ? "#2563eb" : "#cbd5e1",
+                backgroundColor:
+                  paymentModeFilter !== "both" ? "#eff6ff" : "#ffffff",
+              }}
+            >
+              <option value="CASH">CASH</option>
+              <option value="CREDIT">CREDIT</option>
+              <option value="both">All Payment Modes</option>
+            </select>
           </div>
 
           <DateRangeFilter
@@ -895,5 +957,25 @@ const styles = {
     border: "none",
     borderTop: "1px solid #e2e8f0",
     margin: 0,
+  },
+  selectDropdownElement: {
+    border: "none",
+    backgroundColor: "transparent",
+    outline: "none",
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#1e293b",
+    cursor: "pointer",
+    padding: "2px 0",
+    fontFamily: "inherit",
+  },
+  dropdownInputGroup: {
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "#ffffff", // Pure white background for clear input contrast
+    border: "1px solid #cbd5e1",
+    borderRadius: "0px", // Sharp industrial edges
+    padding: "0 6px",
+    height: "28px", // Reduced frame height matching your header inputs
   },
 };
