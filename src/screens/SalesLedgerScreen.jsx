@@ -276,10 +276,19 @@ export default function LedgerScreen() {
           search: searchQuery.trim(),
           startDate: start.toISOString(),
           endDate: end.toISOString(),
+          material: materialFilter,
+          paymentMode: paymentModeFilter,
         },
       });
 
-      exportToExcelFormat(response.data.data, startDate, endDate, searchQuery);
+      exportToExcelFormat(
+        response.data.data,
+        startDate,
+        endDate,
+        searchQuery,
+        materialFilter,
+        paymentModeFilter,
+      );
     } catch (error) {
       console.error("Export failed:", error);
     } finally {
@@ -339,6 +348,7 @@ export default function LedgerScreen() {
                   materialFilter !== "all" ? "#eff6ff" : "#ffffff",
               }}
             >
+              <option value="all">All Material</option>
               <option value="10mm">10mm</option>
               <option value="20mm">20mm</option>
               <option value="6mm">6mm</option>
@@ -347,7 +357,6 @@ export default function LedgerScreen() {
               <option value="dust">Dust</option>
               <option value="gsb">GSB</option>
               <option value="mix">Mix</option>
-              <option value="all">All Material</option>
             </select>
           </div>
           <div style={styles.dropdownInputGroup}>
@@ -363,9 +372,9 @@ export default function LedgerScreen() {
                   paymentModeFilter !== "both" ? "#eff6ff" : "#ffffff",
               }}
             >
+              <option value="both">All Payment Modes</option>
               <option value="CASH">CASH</option>
               <option value="CREDIT">CREDIT</option>
-              <option value="both">All Payment Modes</option>
             </select>
           </div>
 
