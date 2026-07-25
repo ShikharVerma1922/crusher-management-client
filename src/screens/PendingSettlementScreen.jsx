@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { adminApi } from "../lib/axiosApi";
 import { ledgerStyles } from "../styles/ledgerStyles";
-import { Loader2, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function FinancialReleaseDesk() {
@@ -19,7 +19,19 @@ export default function FinancialReleaseDesk() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorStatus, setErrorStatus] = useState(null);
 
+  const [sortConfig, setSortConfig] = useState({
+    key: "receiptNumber",
+    direction: "asc",
+  });
+
   const navigate = useNavigate();
+
+  const handleSort = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+  };
 
   useEffect(() => {
     const urlQuery = searchParams.get("search") || "";
@@ -41,9 +53,8 @@ export default function FinancialReleaseDesk() {
       setSearchParams(searchParams);
     }
   };
-  // --- 🔌 API Integration Operations ---
 
-  // 1. Initial Load: Fetch outstanding unvalued transactions
+  // Fetch outstanding unvalued transactions
   const fetchUnvaluedData = async () => {
     setIsLoading(true);
     setErrorStatus(null);
@@ -66,7 +77,6 @@ export default function FinancialReleaseDesk() {
     }
   };
 
-  // Run fetch loop exactly once when admin opens the component panel
   useEffect(() => {
     fetchUnvaluedData();
   }, []);
@@ -75,7 +85,6 @@ export default function FinancialReleaseDesk() {
   const handleReleaseBatch = async () => {
     if (selectedIds.length === 0) return;
 
-    // Isolate targeting array items
     const targetRows = records.filter((row) => selectedIds.includes(row.id));
     const hasUnratedRows = targetRows.some(
       (row) => !row.materialRate || parseFloat(row.materialRate) <= 0,
@@ -88,7 +97,6 @@ export default function FinancialReleaseDesk() {
       return;
     }
 
-    // Format the precise structural input contract expected by the batch backend controller
     const payload = targetRows.map((row) => ({
       id: row.id,
       materialRate: parseFloat(row.materialRate),
@@ -140,9 +148,43 @@ export default function FinancialReleaseDesk() {
     );
   }, [records, searchQuery]);
 
+  const sortedRecords = useMemo(() => {
+    const rows = [...filteredRecords];
+
+    rows.sort((a, b) => {
+      let aValue = a[sortConfig.key];
+      let bValue = b[sortConfig.key];
+
+      // Handle nulls
+      if (aValue == null) aValue = "";
+      if (bValue == null) bValue = "";
+
+      // Numbers
+      if (typeof aValue === "number" && typeof bValue === "number") {
+        return sortConfig.direction === "asc"
+          ? aValue - bValue
+          : bValue - aValue;
+      }
+
+      // Numeric strings (receipt number, rates, quantities)
+      if (!isNaN(aValue) && !isNaN(bValue)) {
+        return sortConfig.direction === "asc"
+          ? Number(aValue) - Number(bValue)
+          : Number(bValue) - Number(aValue);
+      }
+
+      // Strings
+      return sortConfig.direction === "asc"
+        ? String(aValue).localeCompare(String(bValue))
+        : String(bValue).localeCompare(String(aValue));
+    });
+
+    return rows;
+  }, [filteredRecords, sortConfig]);
+
   // --- 📊 Real-Time Grid Computations ---
   const summaryMetrics = useMemo(() => {
-    return filteredRecords.reduce(
+    return sortedRecords.reduce(
       (acc, row) => {
         acc.totalTickets += 1;
         acc.totalVolume += row.materialQuantity;
@@ -154,14 +196,14 @@ export default function FinancialReleaseDesk() {
       },
       { totalTickets: 0, totalVolume: 0, estimatedExposure: 0 },
     );
-  }, [filteredRecords]);
+  }, [sortedRecords]);
 
   // --- 🎛️ Checkbox Vector Logic ---
   const handleToggleSelectAll = () => {
-    if (selectedIds.length === filteredRecords.length) {
+    if (selectedIds.length === sortedRecords.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(filteredRecords.map((r) => r.id));
+      setSelectedIds(sortedRecords.map((r) => r.id));
     }
   };
 
@@ -322,18 +364,44 @@ export default function FinancialReleaseDesk() {
                   <input
                     type="checkbox"
                     checked={
-                      filteredRecords.length > 0 &&
-                      selectedIds.length === filteredRecords.length
+                      sortedRecords.length > 0 &&
+                      selectedIds.length === sortedRecords.length
                     }
                     onChange={handleToggleSelectAll}
                     style={styles.checkboxElement}
                   />
                 </th>
-                <th width="30" style={ledgerStyles.thElement}>
-                  R.No.
+                <th
+                  style={{
+                    ...ledgerStyles.thElement,
+                  }}
+                  onClick={() => handleSort("receiptNumber")}
+                >
+                  <div style={ledgerStyles.sortHeader}>
+                    <span>R.No.</span>
+
+                    {sortConfig.key === "receiptNumber" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp size={15} />
+                      ) : (
+                        <ChevronDown size={15} />
+                      ))}
+                  </div>
                 </th>
-                <th width="60" style={ledgerStyles.thElement}>
-                  Shift Date
+                <th
+                  style={ledgerStyles.thElement}
+                  onClick={() => handleSort("businessDate")}
+                >
+                  <div style={ledgerStyles.sortHeader}>
+                    <span>Shift Date</span>
+
+                    {sortConfig.key === "businessDate" &&
+                      (sortConfig.direction === "asc" ? (
+                        <ChevronUp size={15} />
+                      ) : (
+                        <ChevronDown size={15} />
+                      ))}
+                  </div>
                 </th>
                 <th minwidth="100" style={ledgerStyles.thElement}>
                   Customer
@@ -389,7 +457,7 @@ export default function FinancialReleaseDesk() {
               </tr>
             </thead>
             <tbody>
-              {filteredRecords.length === 0 ? (
+              {sortedRecords.length === 0 ? (
                 <tr>
                   <td colSpan="14" style={styles.emptyGridPlaceholderCell}>
                     {records.length === 0
@@ -398,7 +466,7 @@ export default function FinancialReleaseDesk() {
                   </td>
                 </tr>
               ) : (
-                filteredRecords.map((row) => {
+                sortedRecords.map((row) => {
                   const isRowChecked = selectedIds.includes(row.id);
                   const matRate = parseFloat(row.materialRate) || 0;
 

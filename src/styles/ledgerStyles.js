@@ -154,7 +154,14 @@ export const ledgerStyles = {
     letterSpacing: "0.2px",
     backgroundColor: "#f1f5f9",
     borderBottom: "2px solid #cbd5e1",
-    borderRight: "1px solid #cbd5e1", // Visible grid borders like an Excel/Tally ledger matrix
+    borderRight: "1px solid #cbd5e1",
+  },
+  sortHeader: {
+    cursor: "pointer",
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   tableBodyRowElement: {
     borderBottom: "1px solid #e2e8f0",
