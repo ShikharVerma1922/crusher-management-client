@@ -544,7 +544,7 @@ export default function LedgerScreen() {
                             ...ledgerStyles.tdElement,
                             boxShadow:
                               ticket.rateStatus === "OPEN"
-                                ? "inset 3px 100 0 #FF8C00"
+                                ? "inset 3px 0 0 #FF8C00"
                                 : "none",
                             cursor:
                               ticket?.rateStatus === "OPEN"
