@@ -468,7 +468,12 @@ export default function LedgerScreen() {
                 >
                   <thead style={ledgerStyles.stickyTableHeader}>
                     <tr>
-                      <th width="30" style={ledgerStyles.thElement}>
+                      <th
+                        width="30"
+                        style={{
+                          ...ledgerStyles.thElement,
+                        }}
+                      >
                         R.No.
                       </th>
 
@@ -537,9 +542,9 @@ export default function LedgerScreen() {
                         <td
                           style={{
                             ...ledgerStyles.tdElement,
-                            borderLeft:
-                              ticket?.rateStatus === "OPEN"
-                                ? "3px solid #FF8C00"
+                            boxShadow:
+                              ticket.rateStatus === "OPEN"
+                                ? "inset 3px 100 0 #FF8C00"
                                 : "none",
                             cursor:
                               ticket?.rateStatus === "OPEN"
@@ -704,8 +709,28 @@ export default function LedgerScreen() {
               style={ledgerStyles.paginationRow}
             >
               <span style={ledgerStyles.paginationText}>
-                Page <strong>{currentPage}</strong> of{" "}
-                <strong>{totalPages}</strong>
+                Page{" "}
+                <select
+                  value={currentPage}
+                  onChange={(e) => fetchLedgerData(Number(e.target.value))}
+                  style={{
+                    margin: "0 6px",
+                    padding: "2px 6px",
+                    border: "1px solid #cbd5e1",
+                    backgroundColor: "#fff",
+                    fontSize: "12px",
+                    color: "#000000",
+                    cursor: "pointer",
+                    outline: "none",
+                  }}
+                >
+                  {Array.from({ length: totalPages }, (_, i) => (
+                    <option key={i + 1} value={i + 1}>
+                      {i + 1}
+                    </option>
+                  ))}
+                </select>{" "}
+                of <strong>{totalPages}</strong>
               </span>
               <div
                 className="ledger-pagination-button-pair"
