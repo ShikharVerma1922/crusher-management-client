@@ -16,6 +16,8 @@ import {
   BadgeIndianRupee,
   Package,
   Wallet,
+  ChevronUp,
+  ChevronDown,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
@@ -49,6 +51,8 @@ export default function LedgerScreen() {
   const [selectedReceiptData, setSelectedReceiptData] = useState({});
 
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+
+  const [sortDirection, setSortDirection] = useState("desc");
 
   // 🗓️ 1. TIME-SERIES BOUNDARY INITIALIZATION CONTEXT
   // Returns a raw "YYYY-MM-DD" string mapping to local calendar states cleanly
@@ -178,6 +182,7 @@ export default function LedgerScreen() {
           endDate: absoluteEndDate,
           material: materialFilter,
           paymentMode: paymentModeFilter,
+          sortDirection,
         });
 
         console.log(
@@ -221,6 +226,7 @@ export default function LedgerScreen() {
       currentPage,
       materialFilter,
       paymentModeFilter,
+      sortDirection,
     ],
   );
 
@@ -233,6 +239,7 @@ export default function LedgerScreen() {
     endDate,
     materialFilter,
     paymentModeFilter,
+    sortDirection,
   ]);
 
   async function handleEditCreditAmount(ticketId, materialQuantity) {
@@ -477,8 +484,24 @@ export default function LedgerScreen() {
                         R.No.
                       </th>
 
-                      <th width="60" style={ledgerStyles.thElement}>
-                        Date/Time
+                      <th
+                        width="100"
+                        style={ledgerStyles.thElement}
+                        onClick={() =>
+                          setSortDirection((prev) =>
+                            prev === "asc" ? "desc" : "asc",
+                          )
+                        }
+                      >
+                        <div style={ledgerStyles.sortHeader}>
+                          <span>Date/Time</span>
+
+                          {sortDirection === "asc" ? (
+                            <ChevronUp size={15} />
+                          ) : (
+                            <ChevronDown size={15} />
+                          )}
+                        </div>
                       </th>
                       <th minwidth="100" style={ledgerStyles.thElement}>
                         Customer
