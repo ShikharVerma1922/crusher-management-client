@@ -8,22 +8,28 @@ export default function LoginScreen() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [errorNotice, setErrorNotice] = useState("");
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    setErrorNotice("");
+    try {
+      setErrorNotice("");
 
-    if (!username.trim() || !password.trim()) {
-      setErrorNotice("Please fill out both management credential lines.");
-      return;
-    }
+      if (!username.trim() || !password.trim()) {
+        setErrorNotice("Please fill out both management credential lines.");
+        return;
+      }
 
-    // 🔐 The secure login call. Pass the credentials directly.
-    // If your backend expects a SHA-256 hash, we can hash it here or let the context wrap it.
-    const result = await adminLogin(username.trim(), password.trim());
+      setIsLoggingIn(true);
+      const result = await adminLogin(username.trim(), password.trim());
 
-    if (!result?.success) {
-      setErrorNotice(result?.message);
+      if (!result?.success) {
+        setErrorNotice(result?.message);
+      }
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -80,10 +86,10 @@ export default function LoginScreen() {
             style={styles.actionSubmitBtn}
             disabled={globalLoading}
           >
-            {globalLoading ? (
+            {globalLoading || isLoggingIn ? (
               <>
                 <Loader2 size={18} style={styles.spinner} /> Authenticating
-                Session Vault...
+                Session...
               </>
             ) : (
               "Login"

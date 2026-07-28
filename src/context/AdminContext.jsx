@@ -8,14 +8,7 @@ export const AdminContext = createContext(null);
 export const AdminProvider = ({ children }) => {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState(null);
-  const [globalLoading, setGlobalLoading] = useState(true); // App-wide boot blocker
-
-  // const adminApi = axios.create({
-  //   baseURL: "http://localhost:3000/api",
-  //   timeout: 8000,
-  //   headers: { "Content-Type": "application/json" },
-  //   withCredentials: true,
-  // });
+  const [globalLoading, setGlobalLoading] = useState(true);
 
   // 📡 1. AUTOMATIC BACKGROUND COOKIE CHECK (Runs ONCE on page load/refresh)
   useEffect(() => {
