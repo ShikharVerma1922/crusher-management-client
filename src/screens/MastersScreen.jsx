@@ -98,7 +98,7 @@ const styles = {
     fontFamily: "JetBrains Mono, Fira Code, Monaco, Consolas, monospace",
   },
   staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
+    padding: "6px 24px 0px 14px",
     flexShrink: 0,
     width: "100%",
     boxSizing: "border-box",

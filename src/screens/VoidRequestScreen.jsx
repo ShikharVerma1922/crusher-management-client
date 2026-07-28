@@ -96,13 +96,7 @@ export default function VoidRequestsScreen() {
   return (
     <div style={ledgerStyles.viewViewportContainer}>
       {/* HEADER STRIP */}
-      <div style={ledgerStyles.staticHeaderBlock}>
-        {/* <div style={styles.actionHeader}>
-          <div>
-            <h1 style={styles.pageTitle}>VOID REQUESTS</h1>
-          </div>
-        </div> */}
-
+      <div style={styles.staticHeaderBlock}>
         {/* CONTROLS STRIP */}
         <div
           style={{
@@ -151,9 +145,9 @@ export default function VoidRequestsScreen() {
               Rejected Logs
             </button>
           </div>
-          <button onClick={fetchTabData} style={styles.refreshButton}>
+          {/* <button onClick={fetchTabData} style={styles.refreshButton}>
             <RefreshCw size={14} />
-          </button>
+          </button> */}
         </div>
         {errorMessage && (
           <div style={ledgerStyles.errorAlertCard}>
@@ -433,22 +427,29 @@ const styles = {
     backgroundColor: "#0f172a",
     color: "#ffffff",
     height: "34px",
-    width: "34px",
-    borderRadius: "6px",
+    // width: "34px",
+    // borderRadius: "6px",
     border: "none",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
-    justifyContent: "center",
+    gap: "10px",
+    justifyContent: "space-between",
+  },
+  staticHeaderBlock: {
+    padding: "6px 24px 0px 14px",
+    flexShrink: 0,
+    width: "100%",
+    boxSizing: "border-box",
+    borderBottom: "1px solid #e2e8f0",
+    backgroundColor: "#ffffff",
   },
 
-  tabBarWrapper: {
-    display: "flex",
-    gap: "20px",
-    paddingLeft: "10px",
-  },
+  tabBarWrapper: { display: "flex", gap: "20px" },
   tabButton: {
     background: "none",
+    display: "flex",
+    gap: 8,
     border: "none",
     padding: "8px 2px 10px 2px",
     fontSize: "12px",
@@ -458,6 +459,8 @@ const styles = {
     borderBottom: "3px solid transparent",
   },
   tabButtonActive: {
+    display: "flex",
+    gap: 8,
     background: "none",
     border: "none",
     padding: "8px 2px 10px 2px",
