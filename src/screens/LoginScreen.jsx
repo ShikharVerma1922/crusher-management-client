@@ -16,7 +16,7 @@ export default function LoginScreen() {
       setErrorNotice("");
 
       if (!username.trim() || !password.trim()) {
-        setErrorNotice("Please fill out both management credential lines.");
+        setErrorNotice("Please fill out the login credential.");
         return;
       }
 
@@ -107,76 +107,84 @@ const styles = {
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
-    background: "#111827",
-    padding: "32px",
+    padding: "24px",
     fontFamily: "Inter, sans-serif",
+    background:
+      "radial-gradient(circle at top left, rgba(99,102,241,0.18), transparent 28%), radial-gradient(circle at top right, rgba(14,165,233,0.16), transparent 26%), linear-gradient(135deg, #0f172a 0%, #111827 45%, #0b1220 100%)",
   },
 
   loginCard: {
     width: "100%",
-    maxWidth: "380px",
-    background: "#d1cfcf",
-    borderRadius: "12px",
-    padding: "36px 32px",
-    border: "1px solid #e5e7eb",
-    boxShadow: "0 12px 40px rgba(0,0,0,0.18)",
+    maxWidth: "420px",
+    padding: "40px 36px",
+    borderRadius: "24px",
+    background: "rgba(255, 255, 255, 0.08)",
+    border: "1px solid rgba(255, 255, 255, 0.14)",
+    boxShadow: "0 24px 80px rgba(0, 0, 0, 0.35)",
+    backdropFilter: "blur(18px)",
+    WebkitBackdropFilter: "blur(18px)",
+    position: "relative",
+    overflow: "hidden",
   },
 
   cardHeader: {
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
-    marginBottom: "16px",
+    marginBottom: "24px",
   },
 
   badgeElement: {
-    width: "56px",
-    height: "56px",
-    borderRadius: "12px",
-    background: "#1f2937",
+    width: "64px",
+    height: "64px",
+    borderRadius: "18px",
+    background:
+      "linear-gradient(135deg, rgba(99,102,241,1) 0%, rgba(14,165,233,1) 100%)",
     color: "#fff",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    fontSize: "24px",
-    fontWeight: "700",
+    fontSize: "26px",
+    fontWeight: "800",
     marginBottom: "18px",
+    boxShadow: "0 12px 30px rgba(59, 130, 246, 0.35)",
   },
 
   mainTitle: {
     margin: 0,
-    fontSize: "26px",
-    fontWeight: "700",
-    color: "#111827",
-    letterSpacing: "-0.5px",
+    fontSize: "28px",
+    fontWeight: "800",
+    color: "#f8fafc",
+    letterSpacing: "-0.03em",
   },
 
   subTitle: {
-    marginTop: "8px",
-    fontSize: "13px",
-    color: "#6b7280",
+    marginTop: "10px",
+    fontSize: "14px",
+    color: "rgba(226, 232, 240, 0.75)",
     textAlign: "center",
-    lineHeight: 1.5,
-    maxWidth: "240px",
+    lineHeight: 1.6,
+    maxWidth: "300px",
   },
 
   errorBanner: {
     display: "flex",
     alignItems: "flex-start",
     gap: "10px",
-    padding: "12px 14px",
-    marginBottom: "24px",
-    background: "#fff7ed",
-    borderLeft: "4px solid #ea580c",
-    color: "#9a3412",
+    padding: "14px 16px",
+    marginBottom: "22px",
+    background: "rgba(251, 146, 60, 0.12)",
+    border: "1px solid rgba(251, 146, 60, 0.25)",
+    color: "#fed7aa",
     fontSize: "13px",
-    borderRadius: "6px",
+    borderRadius: "14px",
+    backdropFilter: "blur(10px)",
   },
 
   formContainer: {
     display: "flex",
     flexDirection: "column",
-    gap: "22px",
+    gap: "18px",
   },
 
   inputLabelFieldPair: {
@@ -188,23 +196,26 @@ const styles = {
   inputLabelText: {
     fontSize: "11px",
     fontWeight: "700",
-    color: "#6b7280",
-    letterSpacing: "1px",
+    color: "rgba(226, 232, 240, 0.72)",
+    letterSpacing: "1.2px",
     textTransform: "uppercase",
   },
 
   inputIconWrapper: {
     display: "flex",
     alignItems: "center",
-    background: "#f9fafb",
-    borderBottom: "2px solid #d1d5db",
-    padding: "0 4px",
-    transition: "all .2s ease",
+    gap: "12px",
+    background: "rgba(15, 23, 42, 0.55)",
+    border: "1px solid rgba(148, 163, 184, 0.18)",
+    borderRadius: "14px",
+    padding: "0 14px",
+    transition: "all 0.2s ease",
+    boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
   },
 
   inputIcon: {
-    color: "#6b7280",
-    marginRight: "12px",
+    color: "#94a3b8",
+    flexShrink: 0,
   },
 
   textInputField: {
@@ -214,26 +225,29 @@ const styles = {
     background: "transparent",
     padding: "14px 0",
     fontSize: "15px",
-    color: "#111827",
+    color: "#f8fafc",
     fontWeight: "500",
+    caretColor: "#60a5fa",
   },
 
   actionSubmitBtn: {
     marginTop: "8px",
     width: "100%",
-    height: "48px",
+    height: "50px",
     border: "none",
-    borderRadius: "8px",
-    background: "#111827",
+    borderRadius: "14px",
+    background:
+      "linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%)",
     color: "#ffffff",
-    fontSize: "14px",
-    fontWeight: "600",
+    fontSize: "15px",
+    fontWeight: "700",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
     gap: "8px",
     cursor: "pointer",
-    transition: "0.2s ease",
+    transition: "transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease",
+    boxShadow: "0 14px 30px rgba(37, 99, 235, 0.35)",
   },
 
   spinner: {
