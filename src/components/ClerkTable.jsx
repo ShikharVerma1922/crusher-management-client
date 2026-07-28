@@ -199,18 +199,6 @@ export default function ClerkTable() {
   return (
     <div style={styles.viewViewportContainer}>
       <div style={styles.staticHeaderBlock}>
-        <div style={styles.actionHeader}>
-          {/* <div>
-            <h1 style={styles.pageTitle}>CLERK REGISTRY</h1>
-          </div> */}
-          <button
-            onClick={() => handleOpenModal(null)}
-            style={styles.createButton}
-          >
-            <Plus size={16} style={{ marginRight: 6 }} /> Add New Operator Clerk
-          </button>
-        </div>
-
         {errorMessage && !isModalOpen && (
           <div style={styles.errorAlertCard}>
             <AlertCircle size={18} style={{ marginRight: 8 }} />
@@ -321,6 +309,14 @@ export default function ClerkTable() {
               </table>
             )}
           </div>
+        </div>
+        <div style={styles.buttonWrapper}>
+          <button
+            onClick={() => handleOpenModal(null)}
+            style={styles.createButton}
+          >
+            <Plus size={16} style={{ marginRight: 6 }} /> Add new clerk
+          </button>
         </div>
       </div>
 
@@ -487,16 +483,17 @@ const styles = {
     // boxSizing: "border-box",
   },
   staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
+    // padding: "10px 24px 16px 24px",
     flexShrink: 0,
     width: "100%",
     boxSizing: "border-box",
   },
-  actionHeader: {
+  buttonWrapper: {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
     gap: "16px",
+    marginTop: "10px",
   },
   pageTitle: {
     fontSize: "20px",
@@ -513,11 +510,11 @@ const styles = {
   createButton: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#2563eb",
+    // backgroundColor: "#2563eb",
     color: "#ffffff",
     fontWeight: "700",
     padding: "8px 14px",
-    borderRadius: "6px",
+    // borderRadius: "6px",
     border: "none",
     cursor: "pointer",
     fontSize: "12px",
@@ -529,7 +526,7 @@ const styles = {
     border: "1px solid #fca5a5",
     color: "#991b1b",
     padding: "8px 12px",
-    borderRadius: "6px",
+    // borderRadius: "6px",
     marginTop: "8px",
     fontSize: "12px",
   },
@@ -544,7 +541,7 @@ const styles = {
   },
   tableCardContainer: {
     backgroundColor: "#ffffff",
-    borderRadius: "8px",
+    // borderRadius: "8px",
     border: "1px solid #e2e8f0",
     display: "flex",
     flexDirection: "column",

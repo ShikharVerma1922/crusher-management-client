@@ -39,8 +39,6 @@ export default function Setting() {
               activeTab === "Clerk"
                 ? {
                     ...styles.tabButtonActive,
-                    color: "#16a34a",
-                    borderBottomColor: "#16a34a",
                   }
                 : styles.tabButton
             }
@@ -97,6 +95,7 @@ const styles = {
     overflow: "hidden",
     width: "100%",
     boxSizing: "border-box",
+    fontFamily: "JetBrains Mono, Fira Code, Monaco, Consolas, monospace",
   },
   staticHeaderBlock: {
     padding: "10px 24px 16px 24px",
@@ -130,7 +129,7 @@ const styles = {
     color: "#334155",
     fontWeight: "700",
     padding: "6px 12px",
-    borderRadius: "6px",
+    // borderRadius: "6px",
     cursor: "pointer",
     fontSize: "11px",
   },
@@ -167,7 +166,7 @@ const styles = {
     border: "1px solid #fca5a5",
     color: "#991b1b",
     padding: "6px 10px",
-    borderRadius: "4px",
+    // borderRadius: "4px",
     margin: "8px 0",
     fontSize: "11px",
   },

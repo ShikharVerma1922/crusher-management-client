@@ -161,15 +161,6 @@ export default function MaterialTable() {
   return (
     <div style={styles.viewViewportContainer}>
       <div style={styles.staticHeaderBlock}>
-        <div style={styles.actionHeader}>
-          <button
-            onClick={() => handleOpenModal(null)}
-            style={styles.createButton}
-          >
-            <Plus size={16} style={{ marginRight: 6 }} /> Register New Variant
-          </button>
-        </div>
-
         {errorMessage && !isModalOpen && (
           <div style={styles.errorAlertCard}>
             <AlertCircle size={18} style={{ marginRight: 8 }} />
@@ -281,6 +272,14 @@ export default function MaterialTable() {
             )}
           </div>
         </div>
+        <div style={styles.actionHeader}>
+          <button
+            onClick={() => handleOpenModal(null)}
+            style={styles.createButton}
+          >
+            <Plus size={16} style={{ marginRight: 6 }} /> Add new material
+          </button>
+        </div>
       </div>
 
       {isModalOpen && (
@@ -350,7 +349,7 @@ export default function MaterialTable() {
                   style={styles.saveSubmitBtn}
                   disabled={submitLoading}
                 >
-                  {submitLoading ? "Saving..." : "Commit Configuration Change"}
+                  {submitLoading ? "Saving..." : "Commit Change"}
                 </button>
               </div>
             </form>
@@ -394,7 +393,7 @@ const styles = {
     // boxSizing: "border-box",
   },
   staticHeaderBlock: {
-    padding: "10px 24px 16px 24px",
+    // padding: "10px 24px 16px 24px",
     flexShrink: 0,
     width: "100%",
     boxSizing: "border-box",
@@ -403,6 +402,7 @@ const styles = {
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
+    marginTop: "10px",
     gap: "16px",
   },
   pageTitle: {
@@ -420,11 +420,11 @@ const styles = {
   createButton: {
     display: "flex",
     alignItems: "center",
-    backgroundColor: "#2563eb",
+    // backgroundColor: "#2563eb",
     color: "#ffffff",
     fontWeight: "700",
     padding: "8px 14px",
-    borderRadius: "6px",
+    // borderRadius: "6px",
     border: "none",
     cursor: "pointer",
     fontSize: "12px",
@@ -436,7 +436,7 @@ const styles = {
     border: "1px solid #fca5a5",
     color: "#991b1b",
     padding: "8px 12px",
-    borderRadius: "6px",
+    // borderRadius: "6px",
     marginTop: "8px",
     fontSize: "12px",
   },
@@ -451,7 +451,7 @@ const styles = {
   },
   tableCardContainer: {
     backgroundColor: "#ffffff",
-    borderRadius: "8px",
+    // borderRadius: "8px",
     border: "1px solid #e2e8f0",
     display: "flex",
     flexDirection: "column",
