@@ -16,7 +16,7 @@ export default function LoginScreen() {
       setErrorNotice("");
 
       if (!username.trim() || !password.trim()) {
-        setErrorNotice("Please fill out the login credential.");
+        setErrorNotice("Both Username and Password are required.");
         return;
       }
 
@@ -38,7 +38,7 @@ export default function LoginScreen() {
       <div style={styles.loginCard}>
         <div style={styles.cardHeader}>
           <img width="50" height="50" src="/logo.png" alt="logo" />
-          <h2 style={styles.mainTitle}>Mandar Crusher</h2>
+          <h2 style={styles.mainTitle}>Mandar Enterprise Console</h2>
           <p style={styles.subTitle}>Administrative Control Access Gateway</p>
         </div>
 
@@ -63,6 +63,7 @@ export default function LoginScreen() {
                 onChange={(e) => setUsername(e.target.value)}
                 style={styles.textInputField}
                 disabled={globalLoading}
+                autoFocus
               />
             </div>
           </div>
@@ -84,7 +85,7 @@ export default function LoginScreen() {
           <button
             type="submit"
             style={styles.actionSubmitBtn}
-            disabled={globalLoading}
+            disabled={globalLoading || isLoggingIn}
           >
             {globalLoading || isLoggingIn ? (
               <>
@@ -117,7 +118,7 @@ const styles = {
     width: "100%",
     maxWidth: "420px",
     padding: "40px 36px",
-    borderRadius: "24px",
+    // borderRadius: "24px",
     background: "rgba(255, 255, 255, 0.08)",
     border: "1px solid rgba(255, 255, 255, 0.14)",
     boxShadow: "0 24px 80px rgba(0, 0, 0, 0.35)",
@@ -132,22 +133,6 @@ const styles = {
     flexDirection: "column",
     alignItems: "center",
     marginBottom: "24px",
-  },
-
-  badgeElement: {
-    width: "64px",
-    height: "64px",
-    borderRadius: "18px",
-    background:
-      "linear-gradient(135deg, rgba(99,102,241,1) 0%, rgba(14,165,233,1) 100%)",
-    color: "#fff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: "26px",
-    fontWeight: "800",
-    marginBottom: "18px",
-    boxShadow: "0 12px 30px rgba(59, 130, 246, 0.35)",
   },
 
   mainTitle: {
@@ -177,7 +162,7 @@ const styles = {
     border: "1px solid rgba(251, 146, 60, 0.25)",
     color: "#fed7aa",
     fontSize: "13px",
-    borderRadius: "14px",
+    // borderRadius: "14px",
     backdropFilter: "blur(10px)",
   },
 
@@ -207,7 +192,7 @@ const styles = {
     gap: "12px",
     background: "rgba(15, 23, 42, 0.55)",
     border: "1px solid rgba(148, 163, 184, 0.18)",
-    borderRadius: "14px",
+    // borderRadius: "14px",
     padding: "0 14px",
     transition: "all 0.2s ease",
     boxShadow: "inset 0 1px 0 rgba(255,255,255,0.03)",
@@ -235,9 +220,8 @@ const styles = {
     width: "100%",
     height: "50px",
     border: "none",
-    borderRadius: "14px",
-    background:
-      "linear-gradient(135deg, rgba(59,130,246,1) 0%, rgba(37,99,235,1) 100%)",
+    // borderRadius: "14px",
+    background: "rgba(37,99,235,1)",
     color: "#ffffff",
     fontSize: "15px",
     fontWeight: "700",
@@ -247,7 +231,7 @@ const styles = {
     gap: "8px",
     cursor: "pointer",
     transition: "transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease",
-    boxShadow: "0 14px 30px rgba(37, 99, 235, 0.35)",
+    // boxShadow: "0 14px 30px rgba(37, 99, 235, 0.35)",
   },
 
   spinner: {
