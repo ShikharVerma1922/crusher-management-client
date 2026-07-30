@@ -22,6 +22,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import DateRangeFilter from "../components/DateRangeFilter.jsx";
 import { ledgerStyles } from "../styles/ledgerStyles.js";
+import TicketDataDrawer from "../components/TicketDataDrawer.jsx";
 
 export default function LedgerScreen() {
   const { adminApi } = useContext(AdminContext);
@@ -789,163 +790,15 @@ export default function LedgerScreen() {
       <div
         style={{
           ...styles.rightFormInputDrawerPane,
-          transform: isDrawerOpen ? "translateX(0%)" : "translateX(100%)", // Animates on/off canvas
+          transform: isDrawerOpen ? "translateX(0%)" : "translateX(100%)",
         }}
       >
-        <div style={styles.drawerTitleBand}>
-          <div>
-            <h3
-              style={{
-                margin: 0,
-                fontSize: "16px",
-                color: "#1e80cb",
-              }}
-            >
-              Ticket Details
-            </h3>
-          </div>
-          <button
-            type="button"
-            onClick={() => {
-              setIsDrawerOpen(false);
-              setSelectedReceiptData({});
-            }}
-            style={styles.closeDrawerCrossBtn}
-          >
-            ✕
-          </button>
-        </div>
-        <div style={styles.drawerBody}>
-          <div style={styles.drawerMetaCardField}>
-            <span flex={1}>Receipt no.</span>
-            <span flex={2}>{selectedReceiptData.receiptNumber}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Date</span>
-            <span>
-              {new Date(selectedReceiptData.businessDate).toLocaleDateString(
-                "en-IN",
-                { day: "2-digit", month: "2-digit", year: "numeric" },
-              )}
-            </span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Time</span>
-            <span>
-              {new Date(selectedReceiptData.createdAt).toLocaleTimeString(
-                "en-IN",
-                { minute: "2-digit", hour: "numeric" },
-              )}
-            </span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Customer Name</span>
-            <span>{selectedReceiptData.customer?.name}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Vehicle No.</span>
-            <span>{selectedReceiptData.vehicleNumber}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Site</span>
-            <span>{selectedReceiptData?.site}</span>
-          </div>
-
-          <div style={styles.drawerMetaCardField}>
-            <span>Material</span>
-            <span>{selectedReceiptData.material?.name}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Material Quantity</span>
-            <span>{selectedReceiptData.materialQuantity} ft³</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Material Rate</span>
-            <span>
-              {selectedReceiptData.rateStatus === "SETTLED"
-                ? `₹${selectedReceiptData.materialRate} /ft³`
-                : "--"}
-            </span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Royalty Quantity</span>
-            <span>{selectedReceiptData.royaltyQuantity} m³</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Royalty Rate</span>
-            <span>₹{selectedReceiptData.royaltyRate} /m³</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Material Amount</span>
-            <span>
-              {selectedReceiptData.rateStatus === "SETTLED"
-                ? `₹${selectedReceiptData.materialAmount}`
-                : "--"}
-            </span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Royalty Amount</span>
-            <span>₹{selectedReceiptData.royaltyAmount}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Grand Total</span>
-            <span>
-              {selectedReceiptData.rateStatus === "SETTLED"
-                ? `₹${selectedReceiptData.grandTotal}`
-                : "--"}
-            </span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Amount Paid</span>
-            <span>₹{selectedReceiptData.amountPaid}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Payment Mode</span>
-            <span>{selectedReceiptData.paymentMode}</span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Balance</span>
-            <span>
-              {selectedReceiptData.rateStatus === "SETTLED"
-                ? `₹${selectedReceiptData.balance}`
-                : "--"}
-            </span>
-          </div>
-          <div style={styles.drawerMetaCardField}>
-            <span>Clerk Name</span>
-            <span>{selectedReceiptData.clerk?.name}</span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-evenly",
-              marginTop: "20px",
-            }}
-          >
-            {selectedReceiptData.rateStatus === "OPEN" && (
-              <button
-                onClick={() =>
-                  navigate(
-                    `/settlements?search=${selectedReceiptData.receiptNumber}`,
-                  )
-                }
-              >
-                Settle Rate
-              </button>
-            )}
-            <button
-              onClick={() => {
-                const confirmed = window.confirm(
-                  "Are you sure you want to void this ticket? This action cannot be undone.",
-                );
-                if (!confirmed) return;
-                handleVoidTransaction();
-              }}
-            >
-              Void Ticket
-            </button>
-          </div>
-        </div>
+        <TicketDataDrawer
+          setIsDrawerOpen={setIsDrawerOpen}
+          setSelectedReceiptData={setSelectedReceiptData}
+          selectedReceiptData={selectedReceiptData}
+          handleVoidTransaction={handleVoidTransaction}
+        />
       </div>
     </div>
   );
