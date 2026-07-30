@@ -27,7 +27,7 @@ export default function LoginScreen() {
         setErrorNotice(result?.message);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
     } finally {
       setIsLoggingIn(false);
     }

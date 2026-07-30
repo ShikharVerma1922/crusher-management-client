@@ -15,6 +15,8 @@ import { exportToExcelFormat } from "../utils/customerExcel";
 import { ledgerStyles } from "../styles/ledgerStyles";
 import { calculateBusinessDate } from "../utils/businessDateCalculator";
 import CustomerEditModal from "../components/CustomerEditModal";
+import TicketDataDrawer from "../components/TicketDataDrawer";
+import PaymentDataDrawer from "../components/PaymentDataDrawer";
 
 export default function CustomerLedger() {
   // --- UI Layout & Interaction States ---
@@ -36,7 +38,7 @@ export default function CustomerLedger() {
     receivedById: null,
     paymentDate: localDateTime,
   });
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isPyamentDrawerOpen, setIsPaymentDrawerOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // --- Core State Registries ---
@@ -56,6 +58,11 @@ export default function CustomerLedger() {
   const [ledgerError, setLedgerError] = useState(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const [selectedReceiptData, setSelectedReceiptData] = useState({});
+  const [isTicketDataLoading, setIsTicketDataLoading] = useState(false);
+  const [showTicketDrawer, setShowTicketDrawer] = useState(false);
+  const [drawerError, setDrawerError] = useState(null);
 
   const activeCustomer = customers.find((c) => c.id === customerId);
 
@@ -227,8 +234,6 @@ export default function CustomerLedger() {
           );
         }
 
-        console.log(response.data?.data);
-
         // const data = await response.data.json();
 
         setCustomers(response.data?.data);
@@ -304,7 +309,7 @@ export default function CustomerLedger() {
         remarks: "",
         paymentDate: localDateTime,
       });
-      setIsDrawerOpen(false);
+      setIsPaymentDrawerOpen(false);
     } catch (error) {
       console.error("Payment registration failed:", error);
       alert(`Voucher Posting Failed: ${error.message}`);
@@ -347,6 +352,25 @@ export default function CustomerLedger() {
     return `${formatERPAmount(Math.abs(amount))} ${amount >= 0 ? "Dr" : "Cr"}`;
   };
 
+  const fetchTicketData = async (id, type) => {
+    try {
+      setIsTicketDataLoading(true);
+      let response;
+      if (type === "DEBIT")
+        response = await adminApi.get(`/transactions/ticket/${id}`);
+      else response = await adminApi.get(`/payments/${id}`);
+      setSelectedReceiptData(response.data.data);
+    } catch (error) {
+      console.error("❌ Ledger Fetch UI Error:", error);
+      setDrawerError(
+        error.response?.data?.message ||
+          "Failed to sync with backend ledger endpoint.",
+      );
+    } finally {
+      setIsTicketDataLoading(false);
+    }
+  };
+
   return (
     <div style={styles.viewViewportContainer}>
       {/* 🚀 MAIN SPLIT FRAME */}
@@ -362,7 +386,7 @@ export default function CustomerLedger() {
         <div
           style={{
             ...styles.leftMasterPane,
-            opacity: isDrawerOpen ? "0.5" : "1",
+            opacity: isPyamentDrawerOpen ? "0.5" : "1",
           }}
         >
           <div style={styles.paneHeader}>CUSTOMER REGISTER</div>
@@ -448,7 +472,11 @@ export default function CustomerLedger() {
                 return (
                   <button
                     key={cust.id}
-                    onClick={() => navigate(`/customers/${cust.id}`)}
+                    onClick={() => {
+                      navigate(`/customers/${cust.id}`);
+                      setShowTicketDrawer(false);
+                      setSelectedReceiptData({});
+                    }}
                     style={{
                       ...styles.selectionButton,
                       backgroundColor: isCurrentActiveTarget
@@ -486,7 +514,7 @@ export default function CustomerLedger() {
         <div
           style={{
             ...styles.centerLedgerStatementPane,
-            marginRight: isDrawerOpen ? "320px" : "0px",
+            marginRight: isPyamentDrawerOpen ? "320px" : "0px",
           }}
         >
           {/* 📅 ERP DURATION PERIOD CONTROL BAR */}
@@ -548,12 +576,17 @@ export default function CustomerLedger() {
                   style={{ cursor: "pointer" }}
                 />
               </div>
-              <button
-                onClick={() => setIsDrawerOpen(true)}
-                style={styles.actionPaymentLaunchBtn}
-              >
-                Add Payment
-              </button>
+              {!isPyamentDrawerOpen && (
+                <button
+                  onClick={() => {
+                    setIsPaymentDrawerOpen(true);
+                    setShowTicketDrawer(false);
+                  }}
+                  style={styles.actionPaymentLaunchBtn}
+                >
+                  Add Payment
+                </button>
+              )}
             </div>
           )}
 
@@ -713,7 +746,19 @@ export default function CustomerLedger() {
                         }
 
                         return (
-                          <tr key={item.id} style={styles.tableBodyRowElement}>
+                          <tr
+                            key={item.id}
+                            style={{
+                              ...styles.tableBodyRowElement,
+                              ...(selectedReceiptData.id === item.id &&
+                                ledgerStyles.selectedTableRow),
+                            }}
+                            onClick={() => {
+                              setShowTicketDrawer(true);
+                              setIsPaymentDrawerOpen(false);
+                              fetchTicketData(item.id, item.type);
+                            }}
+                          >
                             {/* Date column */}
                             <td style={styles.tdElement}>
                               {new Date(item.date).toLocaleDateString("en-IN", {
@@ -728,22 +773,21 @@ export default function CustomerLedger() {
                               style={{
                                 ...styles.tdElement,
                                 fontWeight: "700",
-                                cursor:
-                                  item?.rateStatus === "OPEN"
-                                    ? "pointer"
-                                    : "default",
-                              }}
-                              onClick={() => {
-                                item?.rateStatus === "OPEN" &&
-                                  navigate(
-                                    `/settlements?search=${item.referenceNumber}`,
-                                  );
                               }}
                             >
                               {item.type === "CREDIT" ? "PAY-" : "INV-"}
                               {item.referenceNumber}{" "}
                               {item?.rateStatus === "OPEN" && (
-                                <span title="Rate not settled">
+                                <span
+                                  title="Rate not settled"
+                                  onClick={() => {
+                                    item?.rateStatus === "OPEN" &&
+                                      navigate(
+                                        `/settlements?search=${item.referenceNumber}`,
+                                      );
+                                  }}
+                                  style={{ cursor: "pointer" }}
+                                >
                                   <TriangleAlert
                                     size={10}
                                     color="orange"
@@ -859,7 +903,9 @@ export default function CustomerLedger() {
         <div
           style={{
             ...styles.rightFormInputDrawerPane,
-            transform: isDrawerOpen ? "translateX(0%)" : "translateX(100%)", // Animates on/off canvas
+            transform: isPyamentDrawerOpen
+              ? "translateX(0%)"
+              : "translateX(100%)", // Animates on/off canvas
           }}
         >
           <div style={styles.drawerTitleBand}>
@@ -874,20 +920,10 @@ export default function CustomerLedger() {
               >
                 Payment Received
               </h3>
-              {/* <p
-                style={{
-                  margin: 0,
-                  fontSize: "11px",
-                  color: "#94a3b8",
-                  marginTop: "2px",
-                }}
-              >
-                [Credit Collection Leg Record]
-              </p> */}
             </div>
             <button
               type="button"
-              onClick={() => setIsDrawerOpen(false)}
+              onClick={() => setIsPaymentDrawerOpen(false)}
               style={styles.closeDrawerCrossBtn}
             >
               ✕
@@ -966,7 +1002,7 @@ export default function CustomerLedger() {
                 <input
                   type="number"
                   required
-                  autoFocus={isDrawerOpen}
+                  autoFocus={isPyamentDrawerOpen}
                   placeholder="0.00"
                   step="0.01"
                   value={formData.amountPaid}
@@ -1056,7 +1092,7 @@ export default function CustomerLedger() {
               <div style={styles.drawerSubmissionActionContainer}>
                 <button
                   type="button"
-                  onClick={() => setIsDrawerOpen(false)}
+                  onClick={() => setIsPaymentDrawerOpen(false)}
                   style={styles.cancelFormVoucherBtn}
                 >
                   Cancel
@@ -1071,6 +1107,45 @@ export default function CustomerLedger() {
               </div>
             </form>
           </div>
+        </div>
+        <div
+          style={{
+            ...styles.rightFormInputDrawerPane,
+            transform: showTicketDrawer ? "translateX(0%)" : "translateX(100%)", // Animates on/off canvas
+          }}
+        >
+          {isTicketDataLoading ? (
+            <div style={ledgerStyles.loadingWrapperGrid}>
+              <Loader2
+                size={24}
+                style={{
+                  animation: "spin 1s linear infinite",
+                  color: "#2563eb",
+                }}
+              />
+              <p style={{ marginTop: 12, color: "#64748b", fontSize: "13px" }}>
+                Loading Data...
+              </p>
+            </div>
+          ) : drawerError ? (
+            <div style={styles.errorAlertCard}>
+              <span>CRITICAL ERROR: {drawerError}</span>
+            </div>
+          ) : selectedReceiptData.type === "Invoice" ? (
+            <TicketDataDrawer
+              setIsDrawerOpen={setShowTicketDrawer}
+              setSelectedReceiptData={setSelectedReceiptData}
+              selectedReceiptData={selectedReceiptData}
+              // handleVoidTransaction={handleVoidTransaction}
+            />
+          ) : (
+            <PaymentDataDrawer
+              setIsDrawerOpen={setShowTicketDrawer}
+              setSelectedReceiptData={setSelectedReceiptData}
+              selectedReceiptData={selectedReceiptData}
+              // handleVoidTransaction={handleVoidTransaction
+            />
+          )}
         </div>
       </div>
       <CustomerEditModal

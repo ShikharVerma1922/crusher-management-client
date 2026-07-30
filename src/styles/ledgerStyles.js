@@ -237,6 +237,7 @@ export const ledgerStyles = {
     justifyContent: "center",
     minHeight: "200px",
     width: "100%",
+    height: "100%",
     backgroundColor: "#ffffff",
     fontSize: "12px",
     fontWeight: "700",

@@ -7,7 +7,6 @@ export default function TicketDataDrawer({
   selectedReceiptData,
   handleVoidTransaction,
 }) {
-  console.log(selectedReceiptData);
   const navigate = useNavigate();
   return (
     <div>
@@ -20,7 +19,7 @@ export default function TicketDataDrawer({
               color: "#1e80cb",
             }}
           >
-            Ticket Details
+            Sale Details
           </h3>
         </div>
         <button
@@ -196,7 +195,7 @@ const styles = {
     minHeight: "100%",
   },
   drawerTitleBand: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#e6e9ec",
     padding: "12px 16px",
     display: "flex",
     justifyContent: "space-between",
