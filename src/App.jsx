@@ -41,6 +41,7 @@ import {
 } from "react-router-dom";
 import PendingSettlementPanel from "./screens/PendingSettlementScreen.jsx";
 import NotFound from "./screens/NotFound.jsx";
+import VerifyCertificate from "./screens/VerifyCertificate.jsx";
 
 export default function App() {
   const { isAdminAuthenticated, globalLoading, adminLogout, currentAdmin } =
@@ -49,6 +50,7 @@ export default function App() {
   const location = useLocation();
 
   const currentTab = location.pathname.split("/")[1];
+  const isPublicVerificationRoute = location.pathname.startsWith("/verify/");
 
   const [hoveredTab, setHoveredTab] = useState(null);
 
@@ -82,8 +84,17 @@ export default function App() {
     );
   }
 
-  if (!isAdminAuthenticated) {
+  if (!isAdminAuthenticated && !isPublicVerificationRoute) {
     return <LoginScreen />;
+  }
+
+  if (isPublicVerificationRoute) {
+    return (
+      <Routes>
+        <Route path="/verify/:id" element={<VerifyCertificate />} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    );
   }
 
   return (
@@ -311,6 +322,7 @@ export default function App() {
           <Route path="/clerks" element={<ClerkScreen />} />
           <Route path="/voids" element={<VoidRequestsScreen />} />
           <Route path="/masters" element={<Setting />} />
+          <Route path="/verify/:id" element={<VerifyCertificate />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
