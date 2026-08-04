@@ -2,6 +2,7 @@
 import React, { createContext, useState, useEffect } from "react";
 import axios from "axios";
 import { adminApi } from "../lib/axiosApi.js";
+import { useNavigate } from "react-router-dom";
 
 export const AdminContext = createContext(null);
 
@@ -9,6 +10,7 @@ export const AdminProvider = ({ children }) => {
   const [isAdminAuthenticated, setIsAdminAuthenticated] = useState(false);
   const [currentAdmin, setCurrentAdmin] = useState(null);
   const [globalLoading, setGlobalLoading] = useState(true);
+  const navigate = useNavigate();
 
   // 📡 1. AUTOMATIC BACKGROUND COOKIE CHECK (Runs ONCE on page load/refresh)
   useEffect(() => {
@@ -74,6 +76,7 @@ export const AdminProvider = ({ children }) => {
           console.log(
             "🎯 [Login Action] Admin successfully verified. Dispatching dashboard transition.",
           );
+          navigate("/");
           return { success: true };
         } else {
           return {
@@ -103,6 +106,7 @@ export const AdminProvider = ({ children }) => {
   const adminLogout = async () => {
     try {
       await adminApi.post("/auth/logout");
+      navigate("/login");
     } catch (e) {
       console.error("Logout cookie teardown failed:", e.message);
     } finally {

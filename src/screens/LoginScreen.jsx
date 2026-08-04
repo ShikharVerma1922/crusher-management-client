@@ -1,5 +1,5 @@
 // src/screens/LoginScreen.jsx
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useRef } from "react";
 import { AdminContext } from "../context/AdminContext.jsx";
 import { Lock, User, AlertTriangle, Loader2, Factory } from "lucide-react";
 
@@ -9,6 +9,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const [errorNotice, setErrorNotice] = useState("");
   const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const passwordInputRef = useRef(null);
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
@@ -110,6 +111,12 @@ export default function LoginScreen() {
                   placeholder="Enter your username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      passwordInputRef.current?.focus();
+                    }
+                  }}
                   style={styles.textInputField}
                   disabled={loginLoading}
                   autoFocus
@@ -126,6 +133,7 @@ export default function LoginScreen() {
                 <Lock size={18} style={styles.inputIcon} />
                 <input
                   id="password"
+                  ref={passwordInputRef}
                   type="password"
                   placeholder="Enter your password"
                   value={password}

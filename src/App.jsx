@@ -294,6 +294,7 @@ export default function App() {
       {/* 🌊 3. MAIN PORT CANVAS CONTROLLER */}
       <main style={styles.mainViewportContainer}>
         <Routes>
+          <Route path="/login" element={<LoginScreen />} />
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
           <Route path="/dashboard" element={<DashboardScreen />} />
