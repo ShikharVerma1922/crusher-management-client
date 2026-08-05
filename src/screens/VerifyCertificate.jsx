@@ -2,22 +2,6 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { adminApi } from "../lib/axiosApi.js";
 
-// Static database of issued certificates
-const CERTIFICATE_DATABASE = {
-  "ME-INT-2026-001": {
-    certId: "ME-INT-2026-001",
-    studentName: "Shikhar Verma",
-    credential: "Software Engineering Internship",
-    project: "Weighbridge ERP & Digital Sales Ledger Platform",
-    duration: "May 15, 2026 – July 15, 2026",
-    durationLabel: "2 Months",
-    issueDate: "July 15, 2026",
-    issuer: "Mandar Enterprises",
-    issuingAuthority: "Neeraj Singh, HR Manager",
-    status: "Verified",
-  },
-};
-
 export default function VerifyCertificate() {
   const { id } = useParams();
   const normalizedId = id ? id.toUpperCase() : "";
