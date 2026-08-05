@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { adminApi } from "../lib/axiosApi.js";
 
 // Static database of issued certificates
 const CERTIFICATE_DATABASE = {
@@ -20,7 +21,56 @@ const CERTIFICATE_DATABASE = {
 export default function VerifyCertificate() {
   const { id } = useParams();
   const normalizedId = id ? id.toUpperCase() : "";
-  const certData = CERTIFICATE_DATABASE[normalizedId];
+  const [certificate, setCertificate] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+
+  const fetchCertifateDetails = async () => {
+    if (!id) {
+      setError("No Certificate ID provided.");
+      setLoading(false);
+      return;
+    }
+    try {
+      setLoading(true);
+      setError(null);
+
+      const response = await adminApi.get(`/certificate/${normalizedId}`);
+      const result = response.data;
+      console.log(response);
+      console.log(result);
+      if (response.status == 200) {
+        setCertificate(result.data);
+      } else {
+        setError(result.message || "Record not found or invalid.");
+      }
+    } catch (error) {
+      setError(
+        "Unable to connect to verification server. Please try again later.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCertifateDetails();
+  }, [id]);
+
+  if (loading) {
+    return (
+      <div style={styles.pageBackground}>
+        <div style={styles.cardContainer}>
+          <div style={styles.centerMessage}>
+            <div style={styles.spinner}></div>
+            <p style={{ marginTop: "16px", color: "#64748b" }}>
+              Verifying credential with server...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -59,7 +109,7 @@ export default function VerifyCertificate() {
           className="certificate-verification-card"
         >
           {/* Header Section */}
-          <div
+          {/* <div
             style={styles.header}
             className="certificate-verification-header"
           >
@@ -67,10 +117,10 @@ export default function VerifyCertificate() {
               <div style={styles.companyTitle}>Mandar Enterprises</div>
               <div style={styles.headerSubtitle}>Certificate Verification</div>
             </div>
-          </div>
+          </div> */}
 
           {/* Dynamic Content Body */}
-          {certData ? (
+          {certificate && !loading ? (
             <div>
               {/* Status Banner */}
               <div
@@ -80,10 +130,10 @@ export default function VerifyCertificate() {
                 <div style={styles.statusIcon}>✓</div>
                 <div style={styles.statusContent}>
                   <div style={styles.statusTitle}>Certificate Verified</div>
-                  <div style={styles.statusText}>
+                  {/* <div style={styles.statusText}>
                     This certificate has been verified against the records of
                     Mandar Enterprises.
-                  </div>
+                  </div> */}
                 </div>
               </div>
 
@@ -94,47 +144,51 @@ export default function VerifyCertificate() {
               >
                 <div style={styles.gridItemFull}>
                   <span style={styles.label}>Certificate ID</span>
-                  <span style={styles.valueHighlight}>{certData.certId}</span>
+                  <span style={styles.valueHighlight}>
+                    {certificate.certId}
+                  </span>
                 </div>
 
                 <div style={styles.gridItem}>
                   <span style={styles.label}>Issued To</span>
-                  <span style={styles.valueBold}>{certData.studentName}</span>
+                  <span style={styles.valueBold}>{certificate.internName}</span>
                 </div>
 
                 <div style={styles.gridItem}>
                   <span style={styles.label}>Credential</span>
-                  <span style={styles.value}>{certData.credential}</span>
+                  <span style={styles.value}>{certificate.role}</span>
                 </div>
 
                 <div style={styles.gridItemFull}>
                   <span style={styles.label}>Project Undertaken</span>
-                  <span style={styles.value}>{certData.project}</span>
+                  <span style={styles.value}>{certificate.project}</span>
                 </div>
 
                 <div style={styles.gridItem}>
                   <span style={styles.label}>Internship Period</span>
-                  <span style={styles.value}>{certData.duration}</span>
+                  <span style={styles.value}>{certificate.duration}</span>
                 </div>
 
                 <div style={styles.gridItem}>
                   <span style={styles.label}>Duration</span>
-                  <span style={styles.value}>{certData.durationLabel}</span>
+                  <span style={styles.value}>{certificate.durationLabel}</span>
                 </div>
 
                 <div style={styles.gridItem}>
                   <span style={styles.label}>Issuing Organization</span>
-                  <span style={styles.value}>{certData.issuer}</span>
+                  <span style={styles.value}>{certificate.issuer}</span>
                 </div>
 
                 <div style={styles.gridItem}>
                   <span style={styles.label}>Issue Date</span>
-                  <span style={styles.value}>{certData.issueDate}</span>
+                  <span style={styles.value}>{certificate.issueDate}</span>
                 </div>
 
                 <div style={styles.gridItemFull}>
                   <span style={styles.label}>Authorized Signatory</span>
-                  <span style={styles.value}>{certData.issuingAuthority}</span>
+                  <span style={styles.value}>
+                    {certificate.issuingAuthority}
+                  </span>
                 </div>
               </div>
             </div>
