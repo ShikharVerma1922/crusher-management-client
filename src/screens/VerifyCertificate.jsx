@@ -48,7 +48,7 @@ export default function VerifyCertificate() {
           <div style={styles.centerMessage}>
             <div style={styles.spinner}></div>
             <p style={{ marginTop: "16px", color: "#64748b" }}>
-              Verifying credential with server...
+              Verifying certificate with server...
             </p>
           </div>
         </div>

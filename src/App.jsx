@@ -54,7 +54,7 @@ export default function App() {
 
   const [hoveredTab, setHoveredTab] = useState(null);
 
-  if (globalLoading) {
+  if (globalLoading && !isPublicVerificationRoute) {
     return (
       <div
         style={{
