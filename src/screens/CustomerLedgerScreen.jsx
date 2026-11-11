@@ -900,214 +900,260 @@ export default function CustomerLedger() {
         </div>
 
         {/* 3. RIGHT COLUMN: ERP SLIDE DRAWER (Absolute positioned sidebar) */}
+        {/* ───────── Payment Received drawer ───────── */}
+<div
+  aria-hidden={!isPyamentDrawerOpen}
+  style={{
+    ...styles.rightFormInputDrawerPane,
+    transform: isPyamentDrawerOpen ? "translateX(0%)" : "translateX(100%)", // Animates on/off canvas
+    visibility: isPyamentDrawerOpen ? "visible" : "hidden",
+    transition: isPyamentDrawerOpen
+      ? "transform 0.2s ease-in-out, visibility 0s"
+      : "transform 0.2s ease-in-out, visibility 0s linear 0.2s",
+  }}
+>
+  <style>{`
+    .pd-input:focus,
+    .pd-amount-wrap:focus-within {
+      border-color: #1e80cb !important;
+      box-shadow: 0 0 0 3px rgba(30,128,203,0.15);
+      outline: none;
+    }
+    .pd-input::placeholder { color: #94a3b8; font-weight: 400; }
+    .pd-input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+      cursor: pointer; opacity: 0.6;
+    }
+    .pd-amount-wrap input:focus { outline: none; }
+    .pd-icon-btn:hover { background: #f1f5f9 !important; color: #0f172a !important; }
+    .pd-mode:hover { border-color: #94a3b8 !important; }
+    .pd-secondary:hover { background: #f8fafc !important; }
+    .pd-primary:hover:not(:disabled) { background: #1a6fb0 !important; }
+    .pd-mode:focus-visible,
+    .pd-icon-btn:focus-visible,
+    .pd-secondary:focus-visible,
+    .pd-primary:focus-visible { outline: 2px solid #1e80cb; outline-offset: 2px; }
+  `}</style>
+
+  {/* Header */}
+  <div style={styles.drawerTitleBand}>
+    <div>
+      <h3 style={styles.drawerTitle}>Receive payment</h3>
+    </div>
+    <button
+      type="button"
+      onClick={() => setIsPaymentDrawerOpen(false)}
+      aria-label="Close"
+      className="pd-icon-btn"
+      style={styles.closeDrawerCrossBtn}
+    >
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+        <path
+          d="M2 2l10 10M12 2L2 12"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </button>
+  </div>
+
+  {/* Voucher form */}
+  <form onSubmit={handlePaymentSubmit} style={styles.drawerFormElement}>
+    <div style={styles.drawerBody}>
+      {/* Customer card */}
+      <div
+        style={{
+          ...styles.drawerMetaCardField,
+          borderLeftColor:
+            activeCustomer?.outstandingBalance > 0
+              ? "#dc2626"
+              : activeCustomer?.outstandingBalance < 0
+                ? "#16a34a"
+                : "#1e80cb",
+        }}
+      >
+        {/* <span style={styles.customerLabel}>Customer</span> */}
+        <span style={styles.customerName}>{activeCustomer?.name || "—"}</span>
+        <div style={styles.balanceRow}>
+          <span style={styles.balanceLabel}>
+            {activeCustomer?.outstandingBalance < 0
+              ? "Advance balance"
+              : "Outstanding balance"}
+          </span>
+          <span
+            style={{
+              ...styles.balanceValue,
+              color:
+                activeCustomer?.outstandingBalance > 0
+                  ? "#b91c1c"
+                  : activeCustomer?.outstandingBalance < 0
+                    ? "#15803d"
+                    : "#334155",
+            }}
+          >
+            ₹{formatLedgerBalance(activeCustomer?.outstandingBalance)}
+          </span>
+        </div>
+      </div>
+
+      {/* Payment date */}
+      <div style={styles.formInputStackUnit}>
+        <label htmlFor="pd-date" style={styles.formLabelElement}>
+          Payment date and time
+        </label>
+        <input
+          id="pd-date"
+          type="datetime-local"
+          className="pd-input"
+          value={formData.paymentDate}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, paymentDate: e.target.value }))
+          }
+          style={styles.formTextInputField}
+        />
+      </div>
+
+      {/* Amount */}
+      <div style={styles.formInputStackUnit}>
+        <label htmlFor="pd-amount" style={styles.formLabelElement}>
+          Amount received <span style={styles.requiredMark}>*</span>
+        </label>
+        <div className="pd-amount-wrap" style={styles.amountInputWrap}>
+          <span style={styles.currencyAddon}>₹</span>
+          <input
+            id="pd-amount"
+            type="number"
+            required
+            autoFocus={isPyamentDrawerOpen}
+            placeholder="0.00"
+            step="0.01"
+            value={formData.amountPaid}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, amountPaid: e.target.value }))
+            }
+            style={styles.amountInputField}
+          />
+        </div>
+        {parseFloat(formData.amountPaid) > 0 && (
+          <div style={styles.liveCalculationLabel}>
+            <span>Balance after payment</span>
+            <strong>₹{formatERPAmount(projectedBalance)} Dr</strong>
+          </div>
+        )}
+      </div>
+
+      {/* Payment mode */}
+      <div style={styles.formInputStackUnit}>
+        <span id="pd-mode-label" style={styles.formLabelElement}>
+          Payment mode
+        </span>
         <div
-          style={{
-            ...styles.rightFormInputDrawerPane,
-            transform: isPyamentDrawerOpen
-              ? "translateX(0%)"
-              : "translateX(100%)", // Animates on/off canvas
-          }}
+          role="radiogroup"
+          aria-labelledby="pd-mode-label"
+          style={styles.modeGrid}
         >
-          <div style={styles.drawerTitleBand}>
-            <div>
-              <h3
+          {[
+            { value: "BANK_TRANSFER", label: "Bank transfer" },
+            { value: "UPI", label: "UPI / QR" },
+            { value: "CASH", label: "Cash" },
+            { value: "CHEQUE", label: "Cheque" },
+          ].map((mode) => {
+            const selected = formData.paymentMode === mode.value;
+            return (
+              <button
+                key={mode.value}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                className="pd-mode"
+                onClick={() =>
+                  setFormData((prev) => ({ ...prev, paymentMode: mode.value }))
+                }
                 style={{
-                  margin: 0,
-                  fontSize: "12px",
-                  color: "#38bdf8",
-                  fontWeight: "700",
+                  ...styles.modeBtn,
+                  ...(selected ? styles.modeBtnActive : null),
                 }}
               >
-                Payment Received
-              </h3>
-            </div>
-            <button
-              type="button"
-              onClick={() => setIsPaymentDrawerOpen(false)}
-              style={styles.closeDrawerCrossBtn}
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* 📝 Voucher Form Frame */}
-          <div style={styles.drawerBody}>
-            <form
-              onSubmit={handlePaymentSubmit}
-              style={styles.drawerFormElement}
-            >
-              {/* Customer Context Metadata Block */}
-              <div style={styles.drawerMetaCardField}>
-                <div
-                  style={{
-                    fontWeight: "700",
-                    color: "#0f172a",
-                    marginTop: "2px",
-                  }}
-                >
-                  {activeCustomer?.name}
-                </div>
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color:
-                      activeCustomer?.outstandingBalance > 0
-                        ? "#dc2626"
-                        : "#166534",
-                    fontWeight: "700",
-                    marginTop: "4px",
-                  }}
-                >
-                  {activeCustomer?.outstandingBalance < 0
-                    ? "Advance Payment"
-                    : "Current Debt"}
-                  {" : "}₹
-                  {formatLedgerBalance(activeCustomer?.outstandingBalance)}
-                </div>
-              </div>
-              <hr style={styles.drawerDivider} />
-
-              <div style={styles.formInputStackUnit}>
-                <label style={styles.formLabelElement}>
-                  Payment Date & Time
-                </label>
-                <div style={{ position: "relative" }}>
-                  <input
-                    type="datetime-local"
-                    value={formData.paymentDate}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        paymentDate: e.target.value,
-                      }))
-                    }
-                    style={{
-                      ...styles.formTextInputField,
-                    }}
-                  />
-                  <style>{`
-                    input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-                      filter: invert(32%) sepia(89%) saturate(1800%) hue-rotate(210deg) brightness(95%) contrast(95%);
-                      cursor: pointer;
-                    }
-                  `}</style>
-                </div>
-              </div>
-
-              {/* 1. Input: Amount */}
-              <div style={styles.formInputStackUnit}>
-                <label style={styles.formLabelElement}>
-                  Amount Received (₹) *
-                </label>
-                <input
-                  type="number"
-                  required
-                  autoFocus={isPyamentDrawerOpen}
-                  placeholder="0.00"
-                  step="0.01"
-                  value={formData.amountPaid}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      amountPaid: e.target.value,
-                    }))
-                  }
-                  style={styles.formTextInputField}
-                />
-                {parseFloat(formData.amountPaid) > 0 && (
-                  <span style={styles.liveCalculationLabel}>
-                    Balance After Payment: ₹{formatERPAmount(projectedBalance)}{" "}
-                    Dr
-                  </span>
-                )}
-              </div>
-
-              {/* 2. Input: Mode of Payment */}
-              <div style={styles.formInputStackUnit}>
-                <label style={styles.formLabelElement}>Payment Mode</label>
-                <select
-                  value={formData.paymentMode}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      paymentMode: e.target.value,
-                    }))
-                  }
-                  style={styles.formDropdownSelectField}
-                >
-                  <option value="BANK_TRANSFER">BANK TRANSFER</option>
-                  <option value="UPI">UPI LINK / QR</option>
-                  <option value="CASH">CASH VOUCHER</option>
-                  <option value="CHEQUE">BANK CHEQUE</option>
-                </select>
-              </div>
-
-              {/* 3. Conditional Input: Reference String (Only if not Cash) */}
-              {formData.paymentMode !== "CASH" && (
-                <div style={styles.formInputStackUnit}>
-                  <label style={styles.formLabelElement}>
-                    {formData.paymentMode === "UPI"
-                      ? "UPI Transaction ID"
-                      : formData.paymentMode === "CHEQUE"
-                        ? "Cheque Leaf Number"
-                        : "Bank UTR / Ref Number"}
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Enter validation reference..."
-                    value={formData.referenceNo}
-                    onChange={(e) =>
-                      setFormData((prev) => ({
-                        ...prev,
-                        referenceNo: e.target.value,
-                      }))
-                    }
-                    style={styles.formTextInputField}
-                  />
-                </div>
-              )}
-
-              {/* 4. Input: Remarks */}
-              <div style={styles.formInputStackUnit}>
-                <label style={styles.formLabelElement}>Remarks</label>
-                <textarea
-                  rows="3"
-                  placeholder="Enter receipt context remarks..."
-                  value={formData.remarks}
-                  onChange={(e) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      remarks: e.target.value,
-                    }))
-                  }
-                  style={{
-                    ...styles.formTextInputField,
-                    resize: "none",
-                    height: "auto",
-                  }}
-                />
-              </div>
-              <hr style={styles.drawerDivider} />
-              {/* 🚀 Action Execution Buttons */}
-              <div style={styles.drawerSubmissionActionContainer}>
-                <button
-                  type="button"
-                  onClick={() => setIsPaymentDrawerOpen(false)}
-                  style={styles.cancelFormVoucherBtn}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  style={styles.commitFormVoucherBtn}
-                >
-                  {isSubmitting ? "POSTING..." : "Save Receipt"}
-                </button>
-              </div>
-            </form>
-          </div>
+                {mode.label}
+              </button>
+            );
+          })}
         </div>
+      </div>
+
+      {/* Reference (hidden for cash) */}
+      {formData.paymentMode !== "CASH" && (
+        <div style={styles.formInputStackUnit}>
+          <label htmlFor="pd-ref" style={styles.formLabelElement}>
+            {formData.paymentMode === "UPI"
+              ? "UPI transaction ID"
+              : formData.paymentMode === "CHEQUE"
+                ? "Cheque number"
+                : "Bank UTR / reference no."}
+          </label>
+          <input
+            id="pd-ref"
+            type="text"
+            className="pd-input"
+            placeholder="Enter reference"
+            value={formData.referenceNo}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, referenceNo: e.target.value }))
+            }
+            style={styles.formTextInputField}
+          />
+        </div>
+      )}
+
+      {/* Remarks */}
+      <div style={styles.formInputStackUnit}>
+        <label htmlFor="pd-remarks" style={styles.formLabelElement}>
+          Remarks
+        </label>
+        <textarea
+          id="pd-remarks"
+          rows="3"
+          className="pd-input"
+          placeholder="Add a note for this receipt (optional)"
+          value={formData.remarks}
+          onChange={(e) =>
+            setFormData((prev) => ({ ...prev, remarks: e.target.value }))
+          }
+          style={{
+            ...styles.formTextInputField,
+            resize: "none",
+            height: "auto",
+            padding: "8px 10px",
+            lineHeight: 1.5,
+          }}
+        />
+      </div>
+    </div>
+
+    {/* Pinned actions */}
+    <div style={styles.drawerSubmissionActionContainer}>
+      <button
+        type="button"
+        onClick={() => setIsPaymentDrawerOpen(false)}
+        className="pd-secondary"
+        style={styles.cancelFormVoucherBtn}
+      >
+        Cancel
+      </button>
+      <button
+        type="submit"
+        disabled={isSubmitting}
+        className="pd-primary"
+        style={{
+          ...styles.commitFormVoucherBtn,
+          ...(isSubmitting ? styles.commitFormVoucherBtnDisabled : null),
+        }}
+      >
+        {isSubmitting ? "Saving…" : "Save receipt"}
+      </button>
+    </div>
+  </form>
+</div>
         <div
           style={{
             ...styles.rightFormInputDrawerPane,
@@ -1454,138 +1500,229 @@ const styles = {
     backgroundColor: "#e2e8f0",
   },
 
-  // 📥 RIGHT DRAWER: Side form slide-over panel
+// 📥 RIGHT DRAWER: Side form slide-over panel
   rightFormInputDrawerPane: {
     position: "absolute",
     top: 0,
     bottom: 0,
     right: 0,
-    width: "320px",
+    width: "320px", // unchanged, so your centre-pane margin-right still lines up
     backgroundColor: "#ffffff",
     borderLeft: "1px solid #e2e8f0",
-    boxShadow: "-2px 0 10px rgba(15,23,42,0.08)",
+    boxShadow: "-4px 0 16px rgba(15,23,42,0.08)",
     zIndex: 50,
     display: "flex",
     flexDirection: "column",
-    transition: "transform 0.2s ease-in-out", // Glides smoothly from right margin
-  },
-  drawerBody: {
-    flex: 1,
-    overflowY: "auto",
-    padding: "16px",
-  },
-  drawerFormElement: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-    minHeight: "100%",
+    fontFamily:
+      '"Inter", "Segoe UI", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif', // use "inherit" to keep the page's monospace
+    color: "#0f172a",
   },
   drawerTitleBand: {
     backgroundColor: "#ffffff",
-    padding: "14px 16px",
+    padding: "16px 20px",
     display: "flex",
     justifyContent: "space-between",
-    alignItems: "center",
+    alignItems: "flex-start",
     borderBottom: "1px solid #e2e8f0",
+    flexShrink: 0,
+  },
+  drawerTitle: {
+    margin: 0,
+    fontSize: "16px",
+    fontWeight: 600,
+    color: "#0f172a",
+    letterSpacing: "-0.01em",
+  },
+  drawerSubtitle: {
+    margin: "2px 0 0",
+    fontSize: "12px",
+    color: "#64748b",
   },
   closeDrawerCrossBtn: {
-    color: "#475569",
+    color: "#64748b",
     width: "28px",
     height: "28px",
-    border: "1px solid #cbd5e1",
-    background: "#fff",
-    fontSize: "14px",
+    border: "none",
+    background: "transparent",
     cursor: "pointer",
-    borderRadius: "4px",
+    borderRadius: "6px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
     padding: 0,
   },
-  drawerMetaCardField: {
-    borderRadius: "8px",
+  drawerFormElement: {
+    flex: 1,
+    minHeight: 0,
+    display: "flex",
+    flexDirection: "column",
+  },
+  drawerBody: {
+    flex: 1,
+    overflowY: "auto",
+    padding: "20px",
     backgroundColor: "#f8fafc",
-    padding: "12px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "18px",
+  },
+
+  // Customer card
+  drawerMetaCardField: {
+    display: "flex",
+    flexDirection: "column",
+    gap: "2px",
+    padding: "12px 14px",
+    backgroundColor: "#ffffff",
+    border: "1px solid #e2e8f0",
+    borderLeft: "3px solid #1e80cb", // colour is overridden by balance state in the JSX
+    // borderRadius: "6px",
     fontSize: "12px",
   },
-  drawerDivider: {
-    border: "none",
-    borderTop: "1px solid #e2e8f0",
-    margin: 0,
+  customerLabel: { fontSize: "12px", color: "#64748b" },
+  customerName: { fontSize: "15px", fontWeight: 600, color: "#0f172a" },
+  balanceRow: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "baseline",
+    marginTop: "8px",
+    paddingTop: "8px",
+    borderTop: "1px solid #f1f5f9",
+    fontSize: "12px",
   },
+  balanceLabel: { color: "#64748b" },
+  balanceValue: { fontWeight: 600, fontVariantNumeric: "tabular-nums" },
+
+  // Fields
   formInputStackUnit: {
     display: "flex",
     flexDirection: "column",
-    backgroundColor: "#ffffff",
-    gap: "4px",
+    gap: "6px",
   },
   formLabelElement: {
-    fontSize: "11px",
-    fontWeight: "700",
-    color: "#475569",
-    textTransform: "uppercase",
+    fontSize: "12px",
+    fontWeight: 500,
+    color: "#334155",
   },
+  requiredMark: { color: "#dc2626" },
   formTextInputField: {
-    border: "1px solid #cbd5e1",
-    padding: "5px 8px",
-    fontSize: "12px",
-    fontFamily: "inherit",
-    fontWeight: "600",
-    color: "#1e293b",
-    backgroundColor: "#f2f4f6",
-    outline: "none",
-    height: "28px",
+    width: "100%",
     boxSizing: "border-box",
-  },
-  formDropdownSelectField: {
-    border: "1px solid #cbd5e1",
-    padding: "4px 6px",
-    fontSize: "12px",
+    height: "36px",
+    padding: "0 10px",
+    fontSize: "13px",
     fontFamily: "inherit",
-    fontWeight: "600",
-    color: "#1e293b",
-    backgroundColor: "#f2f4f6",
-    outline: "none",
-    height: "28px",
-    cursor: "pointer",
+    color: "#0f172a",
+    backgroundColor: "#ffffff",
+    border: "1px solid #cbd5e1",
+    // borderRadius: "6px",
+  },
+
+  // Amount input with ₹ addon
+  amountInputWrap: {
+    display: "flex",
+    alignItems: "center",
+    height: "42px",
+    backgroundColor: "#ffffff",
+    border: "1px solid #cbd5e1",
+    // borderRadius: "6px",
+    overflow: "hidden",
+  },
+  currencyAddon: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "38px",
+    height: "100%",
+    fontSize: "15px",
+    color: "#64748b",
+    backgroundColor: "#f1f5f9",
+    borderRight: "1px solid #e2e8f0",
+  },
+  amountInputField: {
+    flex: 1,
+    minWidth: 0,
+    height: "100%",
+    padding: "0 12px",
+    border: "none",
+    background: "transparent",
+    fontSize: "18px",
+    fontWeight: 600,
+    fontFamily: "inherit",
+    fontVariantNumeric: "tabular-nums",
+    color: "#0f172a",
   },
   liveCalculationLabel: {
-    fontSize: "11px",
-    fontWeight: "700",
-    color: "#16a34a",
-    marginTop: "2px",
-    textAlign: "right",
+    display: "flex",
+    justifyContent: "space-between",
+    padding: "8px 10px",
+    fontSize: "12px",
+    color: "#1e5a8a",
+    backgroundColor: "#e8f2fb",
+    borderRadius: "6px",
+    fontVariantNumeric: "tabular-nums",
   },
+
+  // Payment mode selector
+  modeGrid: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr",
+    gap: "8px",
+  },
+  modeBtn: {
+    height: "36px",
+    padding: "0 10px",
+    fontSize: "13px",
+    fontFamily: "inherit",
+    color: "#334155",
+    backgroundColor: "#ffffff",
+    border: "1px solid #cbd5e1",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
+  modeBtnActive: {
+    color: "#1e80cb",
+    fontWeight: 600,
+    backgroundColor: "#e8f2fb",
+    borderColor: "#1e80cb",
+  },
+
+  // Pinned action bar
   drawerSubmissionActionContainer: {
     display: "flex",
     gap: "8px",
-    marginTop: "auto",
-    paddingTop: "8px",
-    position: "sticky",
-    bottom: 0,
-    backgroundColor: "#fff",
+    padding: "12px 20px",
+    borderTop: "1px solid #e2e8f0",
+    backgroundColor: "#ffffff",
+    flexShrink: 0,
   },
   cancelFormVoucherBtn: {
     flex: 1,
-    backgroundColor: "#64748b",
-    color: "#ffffff",
-    border: "1px solid #475569",
-    height: "32px",
-    fontSize: "11px",
-    fontWeight: "700",
-    textTransform: "uppercase",
+    height: "36px",
+    fontSize: "13px",
+    fontWeight: 500,
+    fontFamily: "inherit",
+    color: "#334155",
+    backgroundColor: "#ffffff",
+    border: "1px solid #cbd5e1",
+    borderRadius: "6px",
     cursor: "pointer",
   },
   commitFormVoucherBtn: {
     flex: 2,
-    backgroundColor: "#2563eb",
+    height: "36px",
+    fontSize: "13px",
+    fontWeight: 600,
+    fontFamily: "inherit",
     color: "#ffffff",
-    border: "1px solid #1d4ed8",
-    height: "32px",
-    fontSize: "11px",
-    fontWeight: "700",
-    textTransform: "uppercase",
+    backgroundColor: "#1e80cb",
+    border: "1px solid #1e80cb",
+    borderRadius: "6px",
     cursor: "pointer",
+  },
+  commitFormVoucherBtnDisabled: {
+    opacity: 0.6,
+    cursor: "not-allowed",
   },
 
   // 🧭 FOOTER SYSTEM STATUS ROW
