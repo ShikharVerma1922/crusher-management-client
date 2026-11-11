@@ -9,6 +9,7 @@ export const exportToExcelFormat = (
   if (tickets.length === 0) return;
   const flatSheetData = tickets.map((t, index) => ({
     "R.No.": t.receiptNumber || index + 1,
+    Slip: t.slipNumber,
     Date: new Date(t.businessDate).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
@@ -39,6 +40,7 @@ export const exportToExcelFormat = (
   const workbook = XLSX.utils.book_new();
   worksheet["!cols"] = [
     { wch: 8 }, //receipt
+    { wch: 8 }, //slip number
     { wch: 11 }, //date
     { wch: 11 }, //time
     { wch: 20 }, //name
