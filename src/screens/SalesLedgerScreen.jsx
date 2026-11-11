@@ -486,6 +486,15 @@ export default function LedgerScreen() {
                       </th>
 
                       <th
+                        width="30"
+                        style={{
+                          ...ledgerStyles.thElement,
+                        }}
+                      >
+                        Slip
+                      </th>
+
+                      <th
                         width="100"
                         style={ledgerStyles.thElement}
                         onClick={() =>
@@ -584,6 +593,9 @@ export default function LedgerScreen() {
                           }}
                         >
                           {ticket.receiptNumber}
+                        </td>
+                         <td style={ledgerStyles.tdElement}>
+                          {ticket.slipNumber?.toLocaleString() || ""}
                         </td>
                         <td
                           style={{
