@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { adminApi } from "../lib/axiosApi";
 import { ledgerStyles } from "../styles/ledgerStyles";
-import { ChevronDown, ChevronUp, Loader2, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2, Package, Search } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 export default function FinancialReleaseDesk() {
@@ -13,6 +13,7 @@ export default function FinancialReleaseDesk() {
   const [searchQuery, setSearchQuery] = useState(() => {
     return searchParams.get("search") || "";
   });
+  const [selectedMaterial, setSelectedMaterial] = useState("");
 
   // System Status Triggers
   const [isLoading, setIsLoading] = useState(false);
@@ -134,19 +135,32 @@ export default function FinancialReleaseDesk() {
   };
 
   // --- 🔍 Client-Side Instant Memory Filter ---
-  const filteredRecords = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
-    if (!query) return records;
+  const materialOptions = useMemo(() => {
+  return [...new Set(records.map((row) => row.material).filter(Boolean))].sort(
+    (a, b) => String(a).localeCompare(String(b)),
+  );
+}, [records]);
 
-    return records.filter(
-      (row) =>
-        row.customerName.toLowerCase().includes(query) ||
-        row.vehicleNumber.toLowerCase().includes(query) ||
-        row.receiptNumber.toLowerCase().includes(query) ||
-        row.material.toLowerCase().includes(query) ||
-        row.site.toLowerCase().includes(query),
-    );
-  }, [records, searchQuery]);
+const filteredRecords = useMemo(() => {
+  const query = searchQuery.toLowerCase().trim();
+
+  return records.filter((row) => {
+    const matchesSearch =
+      !query ||
+      [
+        row.customerName,
+        row.vehicleNumber,
+        row.receiptNumber,
+        row.material,
+        row.site,
+      ].some((value) => String(value ?? "").toLowerCase().includes(query));
+
+    const matchesMaterial =
+      !selectedMaterial || row.material === selectedMaterial;
+
+    return matchesSearch && matchesMaterial;
+  });
+}, [records, searchQuery, selectedMaterial]);
 
   const sortedRecords = useMemo(() => {
     const rows = [...filteredRecords];
@@ -238,89 +252,134 @@ export default function FinancialReleaseDesk() {
 
   return (
     <div style={ledgerStyles.viewViewportContainer}>
-      {/* 🛠️ Standard ERP Minimalist Control Header */}
-      <div style={styles.controlHeaderMinimal}>
-        {/* <div style={styles.titleGroup}>
-          <h2 style={styles.headerMainTitle}>Financial Release Console</h2>
-          <span style={styles.headerSubtext}>
-            Pending Billing Dispatches Queue
-          </span>
-        </div> */}
+     <div style={styles.toolbar}>
+  {/* Row 1: filters + summary */}
+  <div style={styles.row}>
+    <div style={styles.filters} role="search">
+      <label style={styles.searchField}>
+        <Search size={16} style={styles.fieldIcon} aria-hidden="true" />
+        <input
+          type="search"
+          placeholder="Search vehicle no, receipt no, customer"
+          aria-label="Search by vehicle number, receipt number or customer name"
+          value={searchQuery}
+          onChange={handleSearchInputChange}
+          style={styles.searchInput}
+        />
+      </label>
 
-        {/* Inline Metric Badges */}
-        <div style={styles.statsInlineGroup}>
-          <div style={styles.metricItem}>
-            Pending: <b>{summaryMetrics.totalTickets}</b>
-          </div>
-          <div style={styles.metricItem}>
-            Volume: <b>{summaryMetrics.totalVolume} ft³</b>
-          </div>
-          <div style={styles.metricItem}>
-            Est. Value:{" "}
-            <b>
-              ₹
-              {summaryMetrics.estimatedExposure.toLocaleString("en-IN", {
-                maximumFractionDigits: 2,
-              })}
-            </b>
-          </div>
-        </div>
-      </div>
-
-      {/* ⚡ ACTIVE TOOLBELT BAR PANEL */}
-      <div style={styles.toolbeltBar}>
-        {/* Live Search Input Filter */}
-        <div
-          className="ledger-search-container"
-          style={ledgerStyles.searchContainer}
+      <label
+        style={{
+          ...styles.selectField,
+          ...(selectedMaterial !== "" ? styles.selectFieldActive : {}),
+        }}
+      >
+        <Package size={14} style={styles.fieldIcon} aria-hidden="true" />
+        <select
+          value={selectedMaterial}
+          onChange={(e) => setSelectedMaterial(e.target.value)}
+          aria-label="Filter by material"
+          style={styles.select}
         >
-          <Search size={16} style={ledgerStyles.searchIcon} />
-          <input
-            type="text"
-            placeholder="Search vehicle no, receipt no, customer name, material..."
-            value={searchQuery}
-            onChange={handleSearchInputChange}
-            style={ledgerStyles.searchInput}
-          />
-        </div>
+          <option value="">All materials</option>
+          {materialOptions.map((material) => (
+            <option key={material} value={material}>
+              {material}
+            </option>
+          ))}
+        </select>
+      </label>
+    </div>
 
-        {/* Bulk Parameter Injection Controls */}
-        <div style={styles.bulkInputContainer}>
-          <input
-            type="number"
-            placeholder="Set Bulk Rate (₹)"
-            value={bulkRateInput}
-            onChange={(e) => setBulkRateInput(e.target.value)}
-            style={styles.bulkRateInputField}
-            disabled={isLoading || selectedIds.length === 0}
-          />
-          <button
-            type="button"
-            onClick={handleApplyBulkRate}
-            disabled={isLoading || selectedIds.length === 0}
-            style={{
-              ...styles.secondaryActionBtn,
-              opacity: selectedIds.length === 0 ? 0.5 : 1,
-            }}
-          >
-            ⚡ Apply Rate to Selected ({selectedIds.length})
-          </button>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleReleaseBatch}
-          disabled={isLoading || isSubmitting || selectedIds.length === 0}
-          style={{
-            ...styles.primaryReleaseBtn,
-            opacity:
-              isLoading || isSubmitting || selectedIds.length === 0 ? 0.6 : 1,
-          }}
-        >
-          {isSubmitting ? "SYNCING LEDGERS..." : "SAVE"}
-        </button>
+    <dl style={styles.summary} aria-label="Pending settlement summary">
+      <div style={{ ...styles.metric, ...styles.metricFirst }}>
+        <dt style={styles.metricLabel}>Pending tickets</dt>
+        <dd style={styles.metricValue}>{summaryMetrics.totalTickets}</dd>
       </div>
+      <div style={styles.metric}>
+        <dt style={styles.metricLabel}>Volume</dt>
+        <dd style={styles.metricValue}>
+          {summaryMetrics.totalVolume}
+          <span style={styles.metricUnit}>ft³</span>
+        </dd>
+      </div>
+      <div style={{ ...styles.metric, ...styles.metricLast }}>
+        <dt style={styles.metricLabel}>Estimated value</dt>
+        <dd style={styles.metricValue}>
+          ₹
+          {summaryMetrics.estimatedExposure.toLocaleString("en-IN", {
+            maximumFractionDigits: 2,
+          })}
+        </dd>
+      </div>
+    </dl>
+  </div>
 
+  {/* Row 2: bulk actions */}
+  <div
+    style={{
+      ...styles.bulkBar,
+      ...(selectedIds.length > 0 ? styles.bulkBarActive : {}),
+    }}
+  >
+    <span
+      style={{
+        ...styles.selectedCount,
+        ...(selectedIds.length > 0 ? styles.selectedCountActive : {}),
+      }}
+      aria-live="polite"
+    >
+      {selectedIds.length > 0 ? `${selectedIds.length} selected` : "None selected"}
+    </span>
+
+    <label style={styles.rateField}>
+      <span style={styles.ratePrefix} aria-hidden="true">₹</span>
+      <input
+        type="number"
+        min="0"
+        step="1"
+        inputMode="decimal"
+        placeholder="Rate"
+        aria-label="Bulk rate in rupees"
+        value={bulkRateInput}
+        onChange={(e) => setBulkRateInput(e.target.value)}
+        disabled={isLoading || selectedIds.length === 0}
+        style={styles.rateInput}
+      />
+    </label>
+
+    <button
+      type="button"
+      onClick={handleApplyBulkRate}
+      disabled={isLoading || selectedIds.length === 0 || bulkRateInput === ""}
+      style={{
+        ...styles.btn,
+        ...(isLoading || selectedIds.length === 0 || bulkRateInput === ""
+          ? styles.btnDisabled
+          : {}),
+      }}
+    >
+      Apply to selected
+    </button>
+
+    <span style={styles.spacer} />
+
+    <button
+      type="button"
+      onClick={handleReleaseBatch}
+      disabled={isLoading || isSubmitting || selectedIds.length === 0}
+      style={{
+        ...styles.btn,
+        ...styles.btnPrimary,
+        ...(isLoading || isSubmitting || selectedIds.length === 0
+          ? styles.btnDisabled
+          : {}),
+      }}
+    >
+      {isSubmitting ? "Saving..." : "Save rates"}
+    </button>
+  </div>
+</div>
       {/* 📊 13-COLUMN HORIZONTAL INTEGRATION MATRIX SHEET */}
       <div style={ledgerStyles.overflowTableScroller}>
         {isLoading ? (
@@ -387,6 +446,9 @@ export default function FinancialReleaseDesk() {
                         <ChevronDown size={15} />
                       ))}
                   </div>
+                </th>
+                 <th width="35" style={ledgerStyles.thElement}>
+                  Slip
                 </th>
                 <th
                   style={ledgerStyles.thElement}
@@ -506,6 +568,7 @@ export default function FinancialReleaseDesk() {
                       >
                         {row.receiptNumber}
                       </td>
+                      <td style={ledgerStyles.tdElement}>{row.slipNumber}</td>
                       <td style={ledgerStyles.tdElement}>{row.businessDate}</td>
                       <td
                         style={{
@@ -517,6 +580,7 @@ export default function FinancialReleaseDesk() {
                       >
                         {row.customerName}
                       </td>
+                    
                       <td style={ledgerStyles.tdElement}>
                         <span style={styles.vehiclePlateBadge}>
                           {row.vehicleNumber}
@@ -654,6 +718,7 @@ const styles = {
   divider: { color: "#475569", margin: "0 4px" },
   toolbeltBar: {
     display: "flex",
+    flexDirection: "column",
     justifyContent: "space-between",
     alignItems: "center",
     padding: "10px 16px",
@@ -677,6 +742,26 @@ const styles = {
     backgroundColor: "#e2e8f0",
     color: "#0d0d0d",
   },
+  searchAndFilterGroup: {
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+  minWidth: 0,
+},
+
+materialFilterSelect: {
+  height: "32px",
+  minWidth: "145px",
+  padding: "0 8px",
+  border: "1px solid #cbd5e1",
+  borderRadius: "4px",
+  backgroundColor: "#ffffff",
+  color: "#334155",
+  fontSize: "12px",
+  fontFamily: "inherit",
+  cursor: "pointer",
+  outline: "none",
+},
   bulkInputContainer: {
     display: "flex",
     alignItems: "center",
@@ -802,14 +887,228 @@ const styles = {
   },
   statsInlineGroup: {
     display: "flex",
-    gap: "16px",
+    flexDirection: "column",
+    border: "1px solid #cbd5e1",
+    justifyContent: "left",
+    gap: "2px",
   },
   metricItem: {
     fontSize: "12px",
     color: "#334155",
     backgroundColor: "#f1f5f9",
-    padding: "4px 8px",
-    border: "1px solid #cbd5e1",
+    padding: "0px 8px",
+    
     borderRadius: "2px",
+  },
+   selectDropdownElement: {
+    border: "none",
+    backgroundColor: "transparent",
+    outline: "none",
+    fontSize: "12px",
+    fontWeight: "600",
+    color: "#1e293b",
+    cursor: "pointer",
+    padding: "2px 0",
+    fontFamily: "inherit",
+  },
+  dropdownInputGroup: {
+    display: "flex",
+    alignItems: "center",
+    backgroundColor: "#ffffff", // Pure white background for clear input contrast
+    border: "1px solid #cbd5e1",
+    borderRadius: "0px", // Sharp industrial edges
+    padding: "0 6px",
+    height: "28px", // Reduced frame height matching your header inputs
+  },
+  toolbar: {
+    width: "100%",
+    boxSizing: "border-box",
+    background: "#ffffff",
+    border: "1px solid #d9e0e8",
+    // borderRadius: 8,
+    color: "#1e293b",
+    fontSize: 13,
+  },
+
+  /* Row 1 */
+  row: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    flexWrap: "wrap",
+    gap: "12px 24px",
+    padding: "6px 16px",
+  },
+  filters: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 8,
+    flex: "1 1 480px",
+    minWidth: 0,
+  },
+
+  /* Search + select fields */
+  searchField: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    flex: "1 1 280px",
+    maxWidth: 420,
+    height: 36,
+    background: "#ffffff",
+    border: "1px solid #d9e0e8",
+    // borderRadius: 6,
+    boxSizing: "border-box",
+  },
+  fieldIcon: {
+    position: "absolute",
+    left: 10,
+    color: "#64748b",
+    pointerEvents: "none",
+  },
+  searchInput: {
+    width: "100%",
+    height: "100%",
+    padding: "0 10px 0 32px",
+    border: 0,
+    outline: "none",
+    background: "transparent",
+    color: "#1e293b",
+    font: "inherit",
+  },
+  selectField: {
+    position: "relative",
+    display: "flex",
+    alignItems: "center",
+    height: 36,
+    background: "#ffffff",
+    border: "1px solid #d9e0e8",
+    // borderRadius: 6,
+    boxSizing: "border-box",
+  },
+  selectFieldActive: {
+    borderColor: "#1d4ed8",
+    background: "#eff4ff",
+  },
+  select: {
+    height: "100%",
+    minWidth: 160,
+    padding: "0 28px 0 32px",
+    border: 0,
+    outline: "none",
+    background: "transparent",
+    color: "#1e293b",
+    font: "inherit",
+    cursor: "pointer",
+  },
+
+  /* Summary metrics */
+  summary: {
+    display: "flex",
+    alignItems: "stretch",
+    margin: 0,
+    flex: "0 0 auto",
+  },
+  metric: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 0,
+    padding: "0 20px",
+    borderLeft: "1px solid #d9e0e8",
+  },
+  metricFirst: { borderLeft: 0, paddingLeft: 0 },
+  metricLast: { paddingRight: 0 },
+  metricLabel: {
+    margin: 0,
+    fontSize: 12,
+    color: "#64748b",
+  },
+  metricValue: {
+    margin: 0,
+    fontSize: 14,
+    fontWeight: 600,
+    fontVariantNumeric: "tabular-nums",
+    whiteSpace: "nowrap",
+  },
+  metricUnit: {
+    marginLeft: 2,
+    fontSize: 12,
+    fontWeight: 400,
+    color: "#64748b",
+  },
+
+  /* Row 2: bulk bar */
+  bulkBar: {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: "8px 12px",
+    padding: "10px 16px",
+    background: "#f8fafc",
+    borderTop: "1px solid #d9e0e8",
+    borderRadius: "0 0 8px 8px",
+  },
+  bulkBarActive: { background: "#eff4ff" },
+  selectedCount: {
+    minWidth: 90,
+    marginRight: 4,
+    fontWeight: 600,
+    color: "#64748b",
+  },
+  selectedCountActive: { color: "#1d4ed8" },
+  rateField: {
+    display: "flex",
+    alignItems: "center",
+    height: 36,
+    background: "#ffffff",
+    border: "1px solid #d9e0e8",
+    // borderRadius: 6,
+    boxSizing: "border-box",
+  },
+  ratePrefix: {
+    paddingLeft: 10,
+    color: "#64748b",
+  },
+  rateInput: {
+    width: 120,
+    height: "100%",
+    padding: "0 10px",
+    border: 0,
+    outline: "none",
+    background: "transparent",
+    color: "#1e293b",
+    font: "inherit",
+    textAlign: "left",
+    fontVariantNumeric: "tabular-nums",
+  },
+  spacer: { flex: "1 1 0" },
+
+  /* Buttons */
+  btn: {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    height: 36,
+    padding: "0 14px",
+    border: "1px solid #d9e0e8",
+    // borderRadius: 6,
+    background: "#ffffff",
+    color: "#1e293b",
+    font: "inherit",
+    fontWeight: 500,
+    whiteSpace: "nowrap",
+    cursor: "pointer",
+  },
+  btnPrimary: {
+    minWidth: 96,
+    background: "#1d4ed8",
+    borderColor: "#1d4ed8",
+    color: "#ffffff",
+  },
+  btnDisabled: {
+    opacity: 0.5,
+    cursor: "not-allowed",
   },
 };
