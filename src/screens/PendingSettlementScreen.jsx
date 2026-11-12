@@ -356,7 +356,7 @@ const filteredRecords = useMemo(() => {
         ...styles.btn,
         ...(isLoading || selectedIds.length === 0 || bulkRateInput === ""
           ? styles.btnDisabled
-          : {}),
+          : {backgroundColor: "#a2f3a6"}),
       }}
     >
       Apply to selected
@@ -1095,7 +1095,7 @@ materialFilterSelect: {
     border: "1px solid #d9e0e8",
     // borderRadius: 6,
     background: "#ffffff",
-    color: "#1e293b",
+    color: "#233b1e",
     font: "inherit",
     fontWeight: 500,
     whiteSpace: "nowrap",
