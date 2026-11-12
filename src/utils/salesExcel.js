@@ -9,7 +9,7 @@ export const exportToExcelFormat = (
   if (tickets.length === 0) return;
   const flatSheetData = tickets.map((t, index) => ({
     "R.No.": t.receiptNumber || index + 1,
-    Slip: t.slipNumber,
+    "Slip No.": t.slipNumber,
     Date: new Date(t.businessDate).toLocaleDateString("en-GB", {
       day: "2-digit",
       month: "short",
